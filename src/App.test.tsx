@@ -1,21 +1,22 @@
-import { render, screen, within } from '@testing-library/preact'
+import { act, render, screen, within } from '@testing-library/preact'
 import userEvent from '@testing-library/user-event'
 import { App } from './App'
 import type { Catalog, Schedule } from './game'
 
 // Opaque IDs; names only appear in the catalog.
 const catalog: Catalog = [
-  { id: 'a1', name: 'Cellar', art: 'a1.jpg' },
-  { id: 'b2', name: 'Chapel', art: 'b2.jpg' },
-  { id: 'c3', name: 'Herb Gatherer', art: 'c3.jpg' },
-  { id: 'd4', name: 'Séance', art: 'd4.jpg' },
-  { id: 'e5', name: 'Market', art: 'e5.jpg' },
-  { id: 'f6', name: 'Mine', art: 'f6.jpg' },
-  { id: 'g7', name: 'Moat', art: 'g7.jpg' },
-  { id: 'h8', name: 'Village', art: 'h8.jpg' },
-  { id: 'i9', name: 'Witch', art: 'i9.jpg' },
-  { id: 'j10', name: 'Smithy', art: 'j10.jpg' },
-  { id: 'k11', name: 'Library', art: 'k11.jpg' },
+  { id: 'a1', name: 'Cellar', answer: true, art: 'a1.jpg' },
+  { id: 'b2', name: 'Chapel', answer: true, art: 'b2.jpg' },
+  { id: 'c3', name: 'Herb Gatherer', answer: true, art: 'c3.jpg' },
+  { id: 'd4', name: 'Séance', answer: true, art: 'd4.jpg' },
+  { id: 'e5', name: 'Market', answer: true, art: 'e5.jpg' },
+  { id: 'f6', name: 'Mine', answer: true, art: 'f6.jpg' },
+  { id: 'g7', name: 'Moat', answer: true, art: 'g7.jpg' },
+  { id: 'h8', name: 'Village', answer: true, art: 'h8.jpg' },
+  { id: 'i9', name: 'Witch', answer: true, art: 'i9.jpg' },
+  { id: 'j10', name: 'Smithy', answer: true, art: 'j10.jpg' },
+  { id: 'k11', name: 'Library', answer: true, art: 'k11.jpg' },
+  { id: 'p0', name: 'Augurs', answer: false, art: 'p0.jpg' },
 ]
 // day 0 = 2026-10-19 → Cellar, day 1 → Chapel, day 2 → Herb Gatherer
 const schedule: Schedule = { launch: '2026-10-19', answers: ['a1', 'b2', 'c3', 'd4'] }
@@ -47,6 +48,26 @@ describe("today's Answer", () => {
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 2')
     await day1.guess('Chapel')
     expect(screen.getByTestId('banner')).toHaveTextContent('Chapel')
+  })
+
+  it('rolls over to the next Day in a tab left open past midnight UTC', () => {
+    vi.useFakeTimers()
+    try {
+      let current = new Date('2026-10-19T23:59:58Z')
+      const { art } = (() => {
+        render(<App catalog={catalog} schedule={schedule} now={() => current} artBase="/art/" />)
+        return { art: () => screen.getByRole('img', { name: /artwork/i }) }
+      })()
+      expect(art().getAttribute('src')).toBe('/art/a1.jpg')
+      current = new Date('2026-10-20T00:00:01Z')
+      act(() => {
+        vi.advanceTimersByTime(1000)
+      })
+      expect(art().getAttribute('src')).toBe('/art/b2.jpg')
+      expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('uses opaque art file names', () => {

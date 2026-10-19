@@ -1,4 +1,5 @@
-export type CatalogEntry = { id: string; name: string; art: string }
+/** `answer` is whether the entry can be an Answer (and so a Guess). */
+export type CatalogEntry = { id: string; name: string; answer: boolean; art: string }
 export type Catalog = CatalogEntry[]
 /** `launch` is the UTC date (YYYY-MM-DD) of day 0; `answers` are opaque Card IDs. */
 export type Schedule = { launch: string; answers: string[] }

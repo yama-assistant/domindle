@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks'
+import { useEffect, useState } from 'preact/hooks'
 import {
   type Catalog,
   type Schedule,
@@ -15,15 +15,26 @@ import './style.css'
 type Props = { catalog: Catalog; schedule: Schedule; now: () => Date; artBase: string }
 
 export function App({ catalog, schedule, now, artBase }: Props) {
-  const [day] = useState(() => dayOf(now()))
+  const [day, setDay] = useState(() => dayOf(now()))
   const [guessed, setGuessed] = useState<string[]>([])
   const [query, setQuery] = useState('')
+
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const today = dayOf(now())
+      if (today === day) return
+      setDay(today)
+      setGuessed([])
+      setQuery('')
+    }, 1000)
+    return () => clearInterval(tick)
+  }, [day, now])
 
   const answer = catalog.find((c) => c.id === answerIdFor(schedule, day))!
   const won = guessed.includes(answer.id)
   const wrong = guessed.filter((id) => id !== answer.id)
   const byId = (id: string) => catalog.find((c) => c.id === id)!
-  const options = suggestions(catalog, query, guessed)
+  const options = suggestions(catalog.filter((c) => c.answer), query, guessed)
   const origin = originFor(day)
 
   const submit = (id: string) => {
