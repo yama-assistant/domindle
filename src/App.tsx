@@ -1,22 +1,30 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useMemo, useState } from 'preact/hooks'
 import {
+  type AnswerSchedule,
   type Catalog,
-  type Schedule,
   answerIdFor,
   dayOf,
-  normalize,
   originFor,
+  resolveTyped,
   scaleFor,
   suggestions,
 } from './game'
+import { type KeyValueStorage, loadGuesses, safeStorage, saveGuesses } from './storage'
 import { text } from './text'
 import './style.css'
 
-type Props = { catalog: Catalog; schedule: Schedule; now: () => Date; artBase: string }
+type Props = {
+  catalog: Catalog
+  schedule: AnswerSchedule
+  now: () => Date
+  storage?: KeyValueStorage
+  artBase: string
+}
 
-export function App({ catalog, schedule, now, artBase }: Props) {
+export function App({ catalog, schedule, now, storage, artBase }: Props) {
+  const store = useMemo(() => safeStorage(storage), [storage])
   const [day, setDay] = useState(() => dayOf(now()))
-  const [guessed, setGuessed] = useState<string[]>([])
+  const [guessedIds, setGuessedIds] = useState(() => loadGuesses(store, day))
   const [query, setQuery] = useState('')
 
   useEffect(() => {
@@ -24,27 +32,38 @@ export function App({ catalog, schedule, now, artBase }: Props) {
       const today = dayOf(now())
       if (today === day) return
       setDay(today)
-      setGuessed([])
+      setGuessedIds(loadGuesses(store, today))
       setQuery('')
     }, 1000)
     return () => clearInterval(tick)
-  }, [day, now])
+  }, [day, now, store])
 
-  const answer = catalog.find((c) => c.id === answerIdFor(schedule, day))!
-  const won = guessed.includes(answer.id)
-  const wrong = guessed.filter((id) => id !== answer.id)
-  const byId = (id: string) => catalog.find((c) => c.id === id)!
-  const options = suggestions(catalog.filter((c) => c.answer), query, guessed)
+  const cardById = (id: string) => catalog.find((c) => c.id === id)
+  const answerId = answerIdFor(schedule, day)
+  const answer = answerId === undefined ? undefined : cardById(answerId)
+  if (!answer) {
+    return (
+      <main>
+        <h1>{text.title}</h1>
+        <p>{text.noPuzzle}</p>
+      </main>
+    )
+  }
+
+  const won = guessedIds.includes(answer.id)
+  const wrongIds = guessedIds.filter((id) => id !== answer.id)
+  const options = suggestions(catalog, query, guessedIds)
   const origin = originFor(day)
 
-  const submit = (id: string) => {
-    setGuessed([...guessed, id])
+  const recordGuess = (id: string) => {
+    const next = [...guessedIds, id]
+    setGuessedIds(next)
+    saveGuesses(store, day, next)
     setQuery('')
   }
   const submitTyped = () => {
-    const exact = options.find((c) => normalize(c.name) === normalize(query))
-    const pick = exact ?? options[0]
-    if (pick) submit(pick.id)
+    const card = resolveTyped(options, query)
+    if (card && !won) recordGuess(card.id)
   }
 
   return (
@@ -56,11 +75,11 @@ export function App({ catalog, schedule, now, artBase }: Props) {
           src={`${artBase}${answer.art}`}
           style={{
             transformOrigin: `${origin.x * 100}% ${origin.y * 100}%`,
-            transform: `scale(${won ? 1 : scaleFor(wrong.length)})`,
+            transform: `scale(${won ? 1 : scaleFor(wrongIds.length)})`,
           }}
         />
         <div class="banner" data-testid="banner">
-          {won ? answer.name : text.guessBanner(guessed.length + 1)}
+          {won ? answer.name : text.guessBanner(guessedIds.length + 1)}
         </div>
       </div>
       <form
@@ -87,7 +106,7 @@ export function App({ catalog, schedule, now, artBase }: Props) {
         {options.length > 0 && (
           <ul id="suggestions" role="listbox" aria-label={text.suggestionsLabel}>
             {options.map((c) => (
-              <li role="option" aria-selected={false} key={c.id} onClick={() => submit(c.id)}>
+              <li role="option" aria-selected={false} key={c.id} onClick={() => recordGuess(c.id)}>
                 {c.name}
               </li>
             ))}
@@ -95,9 +114,9 @@ export function App({ catalog, schedule, now, artBase }: Props) {
         )}
       </form>
       <ul class="wrong-guesses" aria-label={text.wrongGuessesLabel}>
-        {[...wrong].reverse().map((id) => (
+        {[...wrongIds].reverse().map((id) => (
           <li class="wrong" key={id}>
-            {byId(id).name}
+            {cardById(id)?.name}
           </li>
         ))}
       </ul>

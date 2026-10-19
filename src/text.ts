@@ -8,5 +8,6 @@ export const text = {
   guessButton: 'Guess',
   suggestionsLabel: 'Matching cards',
   wrongGuessesLabel: 'Wrong guesses',
+  noPuzzle: 'No puzzle today. Come back soon!',
   creditNote: 'Card art © Rio Grande Games. Non-commercial fan project.',
 }
