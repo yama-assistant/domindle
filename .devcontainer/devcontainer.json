@@ -1,0 +1,41 @@
+{
+  "name": "domindle",
+  "build": { "dockerfile": "Dockerfile" },
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  "remoteUser": "vscode",
+
+  // Only this repo is mounted from the host. No docker socket, no ~/.ssh, no home dir.
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/domindle,type=bind",
+  "workspaceFolder": "/workspaces/domindle",
+
+  "mounts": [
+    // Claude login/config persists in a Docker volume, not the host's ~/.claude
+    "source=domindle-claude-config,target=/home/vscode/.claude,type=volume"
+  ],
+
+  "runArgs": [
+    "--cap-drop=ALL",
+    "--security-opt=no-new-privileges"
+  ],
+
+  "postCreateCommand": "npm install -g --prefix \"$HOME/.npm-global\" @anthropic-ai/claude-code",
+  "remoteEnv": {
+    "PATH": "${containerEnv:HOME}/.npm-global/bin:${containerEnv:PATH}"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["anthropic.claude-code"],
+      "settings": {
+        // Don't copy host git config / credentials into the container
+        "dev.containers.copyGitConfig": false,
+        "dev.containers.gitCredentialHelperConfigLocation": "none"
+      }
+    }
+  }
+}
