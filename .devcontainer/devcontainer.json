@@ -32,9 +32,10 @@
     "vscode": {
       "extensions": ["anthropic.claude-code"],
       "settings": {
-        // Don't copy host git config / credentials into the container
-        "dev.containers.copyGitConfig": false,
-        "dev.containers.gitCredentialHelperConfigLocation": "none"
+        // Don't copy host git config into the container. Git credentials are
+        // still forwarded on demand by VS Code's credential helper (HTTPS push),
+        // so no token or key is stored in the container.
+        "dev.containers.copyGitConfig": false
       }
     }
   }
