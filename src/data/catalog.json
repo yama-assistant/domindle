@@ -1,0 +1,42 @@
+[
+  {
+    "id": "7cdeea61e29d",
+    "name": "Cellar",
+    "art": "7cdeea61e29d.jpg"
+  },
+  {
+    "id": "7c3a6d881375",
+    "name": "Chapel",
+    "art": "7c3a6d881375.jpg"
+  },
+  {
+    "id": "2c9807c6f859",
+    "name": "Festival",
+    "art": "2c9807c6f859.jpg"
+  },
+  {
+    "id": "c885196cbe84",
+    "name": "Market",
+    "art": "c885196cbe84.jpg"
+  },
+  {
+    "id": "717a64b3f786",
+    "name": "Militia",
+    "art": "717a64b3f786.jpg"
+  },
+  {
+    "id": "f53d3f5f8051",
+    "name": "Mine",
+    "art": "f53d3f5f8051.jpg"
+  },
+  {
+    "id": "d7bda90f2921",
+    "name": "Moat",
+    "art": "d7bda90f2921.jpg"
+  },
+  {
+    "id": "71c68f4cdeb6",
+    "name": "Village",
+    "art": "71c68f4cdeb6.jpg"
+  }
+]
