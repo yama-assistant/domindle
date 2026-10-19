@@ -24,7 +24,7 @@
     "--security-opt=no-new-privileges"
   ],
 
-  "postCreateCommand": "npm install -g --prefix \"$HOME/.npm-global\" @anthropic-ai/claude-code && \"$HOME/.npm-global/bin/claude\" plugin marketplace add mattpocock/skills && \"$HOME/.npm-global/bin/claude\" plugin install mattpocock-skills@mattpocock",
+  "postCreateCommand": "npm install -g --prefix \"$HOME/.npm-global\" @anthropic-ai/claude-code",
   "remoteEnv": {
     "PATH": "${containerEnv:HOME}/.npm-global/bin:${containerEnv:PATH}"
   },
