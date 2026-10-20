@@ -50,11 +50,20 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const cardById = (id: string) => catalog.find((c) => c.id === id)
   const answerId = answerIdFor(schedule, day)
   const answer = answerId === undefined ? undefined : cardById(answerId)
+  const yesterdayId = yesterdayAnswerIdFor(schedule, day)
+  const yesterday = yesterdayId === undefined ? undefined : cardById(yesterdayId)
+  const dailyFooter = (
+    <p class="daily-footer" data-testid="daily-footer">
+      {yesterday && `${text.yesterdaysAnswer(yesterday.name)} · `}
+      {text.nextPuzzle(countdown)}
+    </p>
+  )
   if (!answer) {
     return (
       <main>
         <h1>{text.title}</h1>
         <p>{text.noPuzzle}</p>
+        {dailyFooter}
       </main>
     )
   }
@@ -65,8 +74,6 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const wrongIds = guessedIds.filter((id) => id !== answer.id)
   const options = suggestions(catalog, query, guessedIds)
   const origin = originFor(day)
-  const yesterdayId = yesterdayAnswerIdFor(schedule, day)
-  const yesterday = yesterdayId === undefined ? undefined : cardById(yesterdayId)
 
   const recordGuess = (id: string) => {
     const next = [...guessedIds, id]
@@ -156,10 +163,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
           </p>
         </div>
       )}
-      <p class="daily-footer" data-testid="daily-footer">
-        {yesterday && `${text.yesterdaysAnswer(yesterday.name)} · `}
-        {text.nextPuzzle(countdown)}
-      </p>
+      {dailyFooter}
       <footer>{text.creditNote}</footer>
     </main>
   )

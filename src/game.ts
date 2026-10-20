@@ -21,15 +21,21 @@ export function answerIdFor(schedule: AnswerSchedule, day: Day): string | undefi
   return schedule.answerIds[index]
 }
 
-/** The previous Day's Answer Card ID, or undefined on launch day (no earlier Day in the Schedule). */
-export const yesterdayAnswerIdFor = (schedule: AnswerSchedule, day: Day): string | undefined =>
-  answerIdFor(schedule, dayOf(new Date(Date.parse(day) - MS_PER_DAY)))
+/** The Day `offset` days after `day` (negative for earlier). */
+const shiftDay = (day: Day, offset: number): Day => dayOf(new Date(Date.parse(day) + offset * MS_PER_DAY))
 
-/** The time left until midnight UTC as HH:MM:SS. */
+/** The previous Day's Answer Card ID, or undefined on launch day (no earlier Day in the Schedule). */
+export function yesterdayAnswerIdFor(schedule: AnswerSchedule, day: Day): string | undefined {
+  const yesterday = shiftDay(day, -1)
+  return yesterday < schedule.launch ? undefined : answerIdFor(schedule, yesterday)
+}
+
+/** The time left until midnight UTC as HH:MM:SS; a full Day left (the first instant of a Day) reads 23:59:59, never 24:00:00. */
 export function countdownTo(now: Date): string {
-  const left = Math.floor((Date.parse(dayOf(now)) + MS_PER_DAY - now.getTime()) / 1000)
+  const secondsLeft = Math.floor((Date.parse(shiftDay(dayOf(now), 1)) - now.getTime()) / 1000)
+  const seconds = Math.min(secondsLeft, MS_PER_DAY / 1000 - 1)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${pad(Math.floor(left / 3600))}:${pad(Math.floor(left / 60) % 60)}:${pad(left % 60)}`
+  return `${pad(Math.floor(seconds / 3600))}:${pad(Math.floor(seconds / 60) % 60)}:${pad(seconds % 60)}`
 }
 
 export const scaleFor = (wrongGuesses: number) =>
