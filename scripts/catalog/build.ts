@@ -100,7 +100,7 @@ const NOT_CARDS = /^(Mat |Tokens$|advToken$)/
 /** Basic cards are printed in several sets (with alternate artwork); they belong to one Expansion. */
 const BASIC_EXPANSIONS: Record<string, string> = { Potion: 'Alchemy', Platinum: 'Prosperity', Colony: 'Prosperity' }
 
-/** IDs the seed Catalog (and so the Answer Schedule and art files) already use. */
+/** IDs the seed Catalog (and so the art files) already use. */
 const LEGACY_IDS: Record<string, string> = {
   'Base/Cellar': '7cdeea61e29d',
   'Base/Chapel': '7c3a6d881375',

@@ -3,8 +3,6 @@ export type CatalogEntry = { id: string; name: string; answer: boolean; art: str
 export type Catalog = CatalogEntry[]
 /** A Day: a UTC calendar date as YYYY-MM-DD. */
 export type Day = string
-/** The Answer Schedule. `launch` is day 0; `answerIds` are opaque Card IDs. */
-export type AnswerSchedule = { launch: Day; answerIds: string[] }
 
 /** The first Day with a Daily Puzzle. */
 export const LAUNCH_DAY: Day = '2026-10-19'
@@ -18,25 +16,11 @@ const MS_PER_DAY = 86_400_000
 /** The UTC Day as YYYY-MM-DD. */
 export const dayOf = (now: Date): Day => now.toISOString().slice(0, 10)
 
-/** How many Days after the launch Day (day 0) a Day is. */
-export const dayIndex = (launch: Day, day: Day): number => Math.round((Date.parse(day) - Date.parse(launch)) / MS_PER_DAY)
-
-/** The Answer's Card ID for a Day, or undefined when the Schedule doesn't cover it. */
-export function answerIdFor(schedule: AnswerSchedule, day: Day): string | undefined {
-  return schedule.answerIds[dayIndex(schedule.launch, day)]
-}
-
 /** The Day's position on a single running count of Days, so Days can be compared and differenced. */
 export const dayNumber = (day: Day): number => Math.round(Date.parse(day) / MS_PER_DAY)
 
 /** The Day `offset` days after `day` (negative for earlier). */
 export const shiftDay = (day: Day, offset: number): Day => dayOf(new Date(Date.parse(day) + offset * MS_PER_DAY))
-
-/** The previous Day's Answer Card ID, or undefined on launch day (no earlier Day in the Schedule). */
-export function yesterdayAnswerIdFor(schedule: AnswerSchedule, day: Day): string | undefined {
-  const yesterday = shiftDay(day, -1)
-  return yesterday < schedule.launch ? undefined : answerIdFor(schedule, yesterday)
-}
 
 /** The time left until midnight UTC as HH:MM:SS; a full Day left (the first instant of a Day) reads 23:59:59, never 24:00:00. */
 export function countdownTo(now: Date): string {
