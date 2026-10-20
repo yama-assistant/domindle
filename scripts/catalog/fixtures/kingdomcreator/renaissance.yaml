@@ -1,0 +1,30 @@
+name: Renaissance
+cards:
+- name: Acting Troupe
+  cost:
+    treasure: 3
+    potion: 0
+    debt: 0
+  isAction: true
+  isActionSupplier: false
+  isArtifactSupplier: false
+  isAttack: false
+  isBuySupplier: false
+  isDrawer: false
+  isDoom: false
+  isDuration: false
+  isFate: false
+  isMultiDrawer: false
+  isNight: false
+  isReaction: false
+  isTrashing: false
+  isTreasure: false
+  isTerminal: true
+  isVictory: false
+  isVillageSupplier: true
+projects:
+- name: Cathedral
+  cost:
+    treasure: 3
+    potion: 0
+    debt: 0

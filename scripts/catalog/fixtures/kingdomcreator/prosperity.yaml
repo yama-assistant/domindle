@@ -1,0 +1,18 @@
+name: Prosperity
+cards:
+- name: Bank
+  cost:
+    treasure: 7
+    potion: 0
+  isAttack: false
+  isAction: false
+  isTreasure: true
+  isVictory: false
+  isTrashing: false
+  isReaction: false
+othercards:
+- name: Platinum
+  type: Basic Cards
+  isTreasure: true
+  cost:
+    treasure: 9

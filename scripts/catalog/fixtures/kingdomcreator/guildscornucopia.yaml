@@ -1,0 +1,15 @@
+name: Guilds / Cornucopia
+cards:
+- name: Advisor
+  cost:
+    treasure: 4
+    potion: 0
+  isAction: true
+  isDrawer: true
+  isMultiDrawer: true
+- name: Tournament
+  cost:
+    treasure: 4
+    potion: 0
+  isAction: true
+othercards: []

@@ -1,0 +1,17 @@
+name: Plunder
+cards:
+- name: Cage
+  cost:
+    treasure: 2
+  isDrawer: true
+  isDuration: true
+  isMultiDrawer: true
+  isTerminal: true
+  isTreasure: true
+traits:
+- name: Cheap
+othercards:
+- name: Doubloons
+  type: Loot - Treasure
+  cost:
+    treasure: 7

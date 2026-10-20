@@ -1,0 +1,21 @@
+name: Intrigue (2nd)
+cards:
+- name: Lurker
+  cost:
+    treasure: 2
+    potion: 0
+  isAttack: false
+  isAction: true
+  isTreasure: false
+  isVictory: false
+  isTrashing: false
+  isReaction: false
+  isDuration: false
+  isActionSupplier: false
+othercards:
+- name: Copper2_2nd
+  orderstring: Copper 0
+  type: Basic Cards
+  isTreasure: true
+  cost:
+    treasure: 0

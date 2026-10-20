@@ -1,0 +1,16 @@
+name: Guilds / Cornucopia (2nd)
+cards:
+- name: Advisor
+  cost:
+    treasure: 4
+    potion: 0
+  isAction: true
+  isDrawer: true
+  isMultiDrawer: true
+- name: Joust
+  cost:
+    treasure: 5
+    potion: 0
+  isAction: true
+  isDrawer: true
+othercards: []

@@ -1,0 +1,15 @@
+name: Cornucopia
+cards:
+- name: Tournament
+  cost:
+    treasure: 4
+    potion: 0
+  isAttack: false
+  isAction: true
+  isTreasure: false
+  isVictory: false
+  isTrashing: false
+  isReaction: false
+othercards:
+- name: Bag Of Gold
+  type: Action - Prize

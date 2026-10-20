@@ -1,0 +1,73 @@
+name: Allies
+cards:
+- name: Town
+  cost:
+    treasure: 4
+    potion: 0
+    debt: 0
+  isAction: true
+  isActionSupplier: true
+  isArtifactSupplier: false
+  isAttack: false
+  isBuySupplier: true
+  isDoom: false
+  isDrawer: true
+  isDuration: false
+  isFate: false
+  isLiaison: false
+  isMultiDrawer: false
+  isNight: false
+  isReaction: false
+  isTerminal: false
+  isTrashing: false
+  isTreasure: false
+  isVictory: false
+- name: Augurs
+  cost:
+    treasure: 3
+    potion: 0
+    debt: 0
+  isAction: true
+  isActionSupplier: false
+  isArtifactSupplier: false
+  isAttack: true
+  isBuySupplier: true
+  isDoom: false
+  isDrawer: false
+  isDuration: false
+  isFate: false
+  isLiaison: false
+  isMultiDrawer: true
+  isNight: false
+  isReaction: false
+  isTerminal: false
+  isTrashing: true
+  isTreasure: false
+  isVictory: false
+  isCover: true
+allies:
+- name: Architects' Guild
+othercards:
+- name: Augurs - to hide split card
+  type: Action - Augurs - Split Cards
+  orderstring: Augurs
+- name: Herb Gatherer
+  type: Action - Augurs - Split Cards
+  orderstring: Augurs step 1
+  cost:
+    treasure: 3
+- name: Acolyte
+  type: Action - Augurs - Split Cards
+  orderstring: Augurs step 2
+  cost:
+    treasure: 4
+- name: Sorceress
+  type: Action - Augurs - Split Cards
+  orderstring: Augurs step 3
+  cost:
+    treasure: 5
+- name: Sibyl
+  type: Action - Augurs - Split Cards
+  orderstring: Augurs step 4
+  cost:
+    treasure: 6

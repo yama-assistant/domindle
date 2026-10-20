@@ -1,0 +1,55 @@
+name: Adventures
+cards:
+- name: Page
+  cost:
+    treasure: 2
+    potion: 0
+  isAction: true
+  isActionSupplier: false
+  isAttack: false
+  isBuySupplier: false
+  isDuration: false
+  isDrawer: true
+  isMultiDrawer: true
+  isReaction: false
+  isReserve: false
+  isTrashing: false
+  isTraveller: true
+  isTreasure: false
+  isVictory: false
+- name: Peasant
+  cost:
+    treasure: 2
+    potion: 0
+  isAction: true
+  isActionSupplier: false
+  isAttack: false
+  isBuySupplier: true
+  isDuration: false
+  isDrawer: true
+  isMultiDrawer: true
+  isReaction: false
+  isReserve: false
+  isTrashing: false
+  isTraveller: true
+  isTreasure: false
+  isVictory: false
+events:
+- name: Alms
+  cost:
+    treasure: 0
+    potion: 0
+  isActionSupplier: false
+  isAttack: false
+  isBuySupplier: false
+  isDrawer: false
+  isReaction: false
+  isTrashing: false
+othercards:
+- name: Champion
+  type: Action - Duration - Travellers Page
+  orderstring: Traveller Page step 5
+  cost:
+    treasure: 6
+- name: Tavern_mat
+  type: Mat Horizontal
