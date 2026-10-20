@@ -332,8 +332,8 @@ describe('stats', () => {
     await s.user.click(screen.getByRole('button', { name: /stats/i }))
     return screen.getByRole('dialog')
   }
-  const stat = (dialog: HTMLElement, label: string) =>
-    within(dialog).getByText(label).parentElement?.querySelector('dd')?.textContent
+  const stat = (scope: HTMLElement, label: string) =>
+    within(scope).getByText(label).closest('div')?.querySelector('dd')?.textContent
 
   it('shows Days played, Streaks, average Score and a histogram of Scores', async () => {
     const storage = seeded([
@@ -394,7 +394,12 @@ describe('stats', () => {
     expect(screen.queryByText(/solved it in/i)).not.toBeInTheDocument()
     await s.guess('Cellar')
     expect(screen.getByText('You solved it in 2 guesses!')).toBeInTheDocument()
-    expect(screen.getByText('Days played').parentElement?.querySelector('dd')).toHaveTextContent('1')
+    const win = screen.getByText('You solved it in 2 guesses!').parentElement as HTMLElement
+    expect(stat(win, 'Days played')).toBe('1')
+    expect(stat(win, 'Current streak')).toBe('1')
+    expect(stat(win, 'Best streak')).toBe('1')
+    expect(stat(win, 'Average score')).toBe('2.0')
+    expect(within(win).getByRole('list', { name: /score distribution/i })).toBeInTheDocument()
   })
 
   it('closes with the button, Escape, or a click outside', async () => {
@@ -402,11 +407,12 @@ describe('stats', () => {
     await openStats(s)
     await s.user.click(screen.getByRole('button', { name: 'Close' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /stats/i })).toHaveFocus()
     await openStats(s)
     await s.user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     await openStats(s)
-    await s.user.click(screen.getByRole('dialog').parentElement as HTMLElement)
+    await s.user.click(screen.getByTestId('backdrop'))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     await openStats(s)
     await s.user.click(screen.getByRole('heading', { name: 'Statistics' }))

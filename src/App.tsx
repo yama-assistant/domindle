@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'preact/hooks'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import {
   type AnswerSchedule,
   type Catalog,
@@ -30,6 +30,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const [query, setQuery] = useState('')
   const [shareStatus, setShareStatus] = useState<'copied' | 'failed'>()
   const [statsOpen, setStatsOpen] = useState(false)
+  const statsButton = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const tick = setInterval(() => {
@@ -48,7 +49,10 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
     if (!statsOpen) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setStatsOpen(false)
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      statsButton.current?.focus()
+    }
   }, [statsOpen])
 
   const cardById = (id: string) => catalog.find((c) => c.id === id)
@@ -131,10 +135,12 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
 
   return (
     <main>
-      <h1>{text.title}</h1>
-      <button type="button" class="stats-button" onClick={() => setStatsOpen(true)}>
-        {text.statsButton}
-      </button>
+      <header>
+        <h1>{text.title}</h1>
+        <button type="button" ref={statsButton} onClick={() => setStatsOpen(true)}>
+          {text.statsButton}
+        </button>
+      </header>
       <div class="card">
         <div class="frame">
           <img
@@ -201,7 +207,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
         </div>
       )}
       {statsOpen && (
-        <div class="backdrop" onClick={() => setStatsOpen(false)}>
+        <div class="backdrop" data-testid="backdrop" onClick={() => setStatsOpen(false)}>
           <div
             class="dialog"
             role="dialog"
