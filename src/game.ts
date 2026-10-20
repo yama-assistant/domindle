@@ -27,7 +27,7 @@ export function answerIdFor(schedule: AnswerSchedule, day: Day): string | undefi
 export const dayNumber = (day: Day): number => Math.round(Date.parse(day) / MS_PER_DAY)
 
 /** The Day `offset` days after `day` (negative for earlier). */
-const shiftDay = (day: Day, offset: number): Day => dayOf(new Date(Date.parse(day) + offset * MS_PER_DAY))
+export const shiftDay = (day: Day, offset: number): Day => dayOf(new Date(Date.parse(day) + offset * MS_PER_DAY))
 
 /** The previous Day's Answer Card ID, or undefined on launch day (no earlier Day in the Schedule). */
 export function yesterdayAnswerIdFor(schedule: AnswerSchedule, day: Day): string | undefined {
