@@ -88,7 +88,8 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const stats = computeStats(loadHistory(store), day)
 
   const recordGuess = (id: string) => {
-    // A tab whose timer hasn't fired yet must not save its old Day's Guesses over the new Day's game.
+    // A tab whose timer hasn't fired yet must not save its old Day's Guesses over the new Day's game;
+    // the Guess was for the old Day's puzzle, so it is dropped and the player guesses again.
     if (rollOver(now())) return
     // Another tab may have saved Guesses (or the win) since this one loaded, so merge with what is saved.
     const next = mergeGuess(loadGuesses(store, day), guessedIds, id, answer.id)
