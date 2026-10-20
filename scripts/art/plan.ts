@@ -46,7 +46,7 @@ export function fallbackUrl(expansion: string, name: string): string | undefined
 }
 
 export type ArtOutcome =
-  | { id: string; name: string; status: 'present' }
+  | { id: string; name: string; status: 'present'; width: number }
   | { id: string; name: string; status: 'wiki' | 'fallback'; width: number }
   | { id: string; name: string; status: 'missing' }
 
@@ -59,7 +59,7 @@ export function report(outcomes: ArtOutcome[]): string {
   section('Missing', outcomes.filter((o) => o.status === 'missing').map((o) => `${o.name} (${o.id})`))
   section(
     `Low resolution (under ${ART_WIDTH}px wide)`,
-    outcomes.flatMap((o) => ((o.status === 'wiki' || o.status === 'fallback') && o.width < ART_WIDTH ? [`${o.name} (${o.id}): ${o.width}px`] : [])),
+    outcomes.flatMap((o) => (o.status !== 'missing' && o.width < ART_WIDTH ? [`${o.name} (${o.id}): ${o.width}px`] : [])),
   )
   section('From the KingdomCreator fallback', outcomes.filter((o) => o.status === 'fallback').map((o) => `${o.name} (${o.id})`))
   const count = (status: ArtOutcome['status']) => outcomes.filter((o) => o.status === status).length

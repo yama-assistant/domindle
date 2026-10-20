@@ -18,17 +18,33 @@ async function download(url: string): Promise<Buffer | undefined> {
   const wait = last + THROTTLE_MS - Date.now()
   if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait))
   last = Date.now()
-  const response = await fetch(url, { headers: { 'user-agent': 'domindle-art-pipeline (one-off local run)' } })
+  const response = await fetch(url, {
+    headers: { 'user-agent': 'domindle-art-pipeline (one-off local run)' },
+    signal: AbortSignal.timeout(30_000),
+  })
+  // Rate limiting and server errors are worth retrying; anything else (a 404) means no such file.
+  if (response.status === 429 || response.status >= 500) throw new Error(`${url}: ${response.status}`)
   return response.ok ? Buffer.from(await response.arrayBuffer()) : undefined
+}
+
+async function downloadWithRetry(url: string): Promise<Buffer | undefined> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await download(url)
+    } catch (error) {
+      if (attempt === 3) throw error
+      await new Promise((resolve) => setTimeout(resolve, attempt * 5000))
+    }
+  }
 }
 
 async function fetchArt(expansion: string, name: string) {
   for (const file of wikiFiles(name)) {
-    const bytes = await download(wikiUrl(file))
+    const bytes = await downloadWithRetry(wikiUrl(file))
     if (bytes) return { bytes, status: 'wiki' as const }
   }
   const url = fallbackUrl(expansion, name)
-  const bytes = url && (await download(url))
+  const bytes = url && (await downloadWithRetry(url))
   return bytes ? { bytes, status: 'fallback' as const } : undefined
 }
 
@@ -36,20 +52,28 @@ const outcomes: ArtOutcome[] = []
 for (const { id, name, expansion, answer } of catalog) {
   if (!answer) continue
   const file = new URL(`${id}.webp`, OUT)
-  if (existsSync(file)) {
-    outcomes.push({ id, name, status: 'present' })
-    continue
-  }
-  const art = await fetchArt(expansion, name)
-  if (!art) {
+  try {
+    if (existsSync(file)) {
+      // Never upscaled, so a saved file under ART_WIDTH wide means its source was too.
+      const { width = 0 } = await sharp(file.pathname).metadata()
+      outcomes.push({ id, name, status: 'present', width })
+      continue
+    }
+    const art = await fetchArt(expansion, name)
+    if (!art) {
+      outcomes.push({ id, name, status: 'missing' })
+      console.log(`missing ${name}`)
+      continue
+    }
+    const { width = 0 } = await sharp(art.bytes).metadata()
+    await writeFile(file, await sharp(art.bytes).rotate().resize({ width: ART_WIDTH, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer())
+    outcomes.push({ id, name, status: art.status, width })
+    console.log(`${art.status} ${name}`)
+  } catch (error) {
+    // One bad download or file must not lose the run; rerun to retry it.
     outcomes.push({ id, name, status: 'missing' })
-    console.log(`missing ${name}`)
-    continue
+    console.log(`failed ${name}: ${error instanceof Error ? error.message : error}`)
   }
-  const { width = 0 } = await sharp(art.bytes).metadata()
-  await writeFile(file, await sharp(art.bytes).resize({ width: ART_WIDTH, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer())
-  outcomes.push({ id, name, status: art.status, width })
-  console.log(`${art.status} ${name}`)
 }
 
 console.log('\n' + report(outcomes))

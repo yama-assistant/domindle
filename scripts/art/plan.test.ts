@@ -38,7 +38,8 @@ describe('fallbackUrl', () => {
 
 describe('report', () => {
   const outcomes: ArtOutcome[] = [
-    { id: 'a', name: 'Cellar', status: 'present' },
+    { id: 'a', name: 'Cellar', status: 'present', width: 1000 },
+    { id: 'f', name: 'Village', status: 'present', width: 584 },
     { id: 'b', name: 'Chapel', status: 'wiki', width: 1400 },
     { id: 'c', name: 'Moat', status: 'wiki', width: 640 },
     { id: 'd', name: 'Mine', status: 'fallback', width: 1000 },
@@ -49,13 +50,14 @@ describe('report', () => {
     const text = report(outcomes)
     expect(text).toContain('Missing (1):\n  Witch (e)')
     expect(text).toContain('Moat (c): 640px')
+    expect(text).toContain('Village (f): 584px')
     expect(text).not.toContain('Chapel (b)')
     expect(text).toContain('From the KingdomCreator fallback (1):\n  Mine (d)')
-    expect(text).toContain('5 Answers: 1 already present, 2 from the wiki, 1 from the fallback, 1 missing')
+    expect(text).toContain('6 Answers: 2 already present, 2 from the wiki, 1 from the fallback, 1 missing')
   })
 
   it('omits empty sections', () => {
-    expect(report([{ id: 'a', name: 'Cellar', status: 'present' }])).toBe(
+    expect(report([{ id: 'a', name: 'Cellar', status: 'present', width: 1000 }])).toBe(
       '1 Answers: 1 already present, 0 from the wiki, 0 from the fallback, 0 missing',
     )
   })
