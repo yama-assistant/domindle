@@ -1,0 +1,73 @@
+name: Empires
+cards:
+- name: Encampment / Plunder
+  cost:
+    treasure: 2
+    potion: 0
+    debt: 0
+  isAction: true
+  isActionSupplier: true
+  isAttack: false
+  isBuySupplier: false
+  isDrawer: true
+  isMultiDrawer: true
+  isDuration: false
+  isReaction: false
+  isTrashing: false
+  isTreasure: false
+  isVictory: false
+- name: Castles
+  cost:
+    treasure: 3
+    potion: 0
+    debt: 0
+  isAction: false
+  isActionSupplier: false
+  isAttack: false
+  isBuySupplier: false
+  isDrawer: true
+  isDuration: false
+  isReaction: false
+  isTrashing: false
+  isTreasure: false
+  isVictory: true
+events:
+- name: Advance
+  cost:
+    treasure: 0
+    potion: 0
+    debt: 0
+  isActionSupplier: false
+  isBuySupplier: false
+  isDrawer: false
+  isReaction: false
+  isTrashing: true
+landmarks:
+- name: Aqueduct
+othercards:
+- name: Castles - to hide split card
+  type: Victory - Castle
+  orderstring: Castles step 0
+- name: Humble Castle
+  type: Treasure - Victory - Castle
+  orderstring: Castles step 1
+  cost:
+    treasure: 3
+- name: Crumbling Castle
+  type: Action - Victory - Castle
+  orderstring: Castles step 2
+  cost:
+    treasure: 4
+- name: Encampment / Plunder - to hide split card
+  type: Action - Split Cards
+  orderstring: Encampment / Plunder
+- name: Encampment
+  orderstring: Encampment / Plunder step 1
+  type: Action - Split Cards
+  cost:
+    treasure: 2
+- name: Plunder
+  type: Treasure - Split Cards
+  orderstring: Encampment / Plunder step 2
+  cost:
+    treasure: 5

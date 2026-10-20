@@ -1,0 +1,31 @@
+name: Intrigue
+cards:
+- name: Great Hall
+  cost:
+    treasure: 3
+    potion: 0
+  isAttack: false
+  isAction: true
+  isTreasure: false
+  isVictory: true
+  isTrashing: false
+  isReaction: false
+  isDuration: false
+- name: Coppersmith
+  cost:
+    treasure: 4
+    potion: 0
+  isAttack: false
+  isAction: true
+  isTreasure: false
+  isVictory: false
+  isTrashing: false
+  isReaction: false
+  isDuration: false
+othercards:
+- name: Copper2
+  orderstring: Copper 0
+  type: Basic Cards
+  isTreasure: true
+  cost:
+    treasure: 0

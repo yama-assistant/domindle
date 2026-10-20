@@ -1,0 +1,12 @@
+name: Prosperity (2nd)
+cards:
+- name: Bank
+  cost:
+    treasure: 7
+  isTreasure: true
+othercards:
+- name: Platinum_2nd
+  type: Basic Cards
+  isTreasure: true
+  cost:
+    treasure: 9

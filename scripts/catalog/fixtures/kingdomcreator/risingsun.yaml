@@ -1,0 +1,11 @@
+name: Rising Sun
+cards:
+- name: Alley
+  cost:
+    treasure: 4
+  isShadow: true
+  isAction: true
+  isDrawer: true
+  isTrashing: true
+prophecies:
+- name: Approaching Army

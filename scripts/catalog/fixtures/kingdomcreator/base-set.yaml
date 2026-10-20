@@ -1,0 +1,48 @@
+name: Base Set
+cards:
+- name: Cellar
+  cost:
+    treasure: 2
+    potion: 0
+  isAttack: false
+  isAction: true
+  isDrawer: true
+  isMultiDrawer: true
+  isTreasure: false
+  isVictory: false
+  isTrashing: false
+  isReaction: false
+- name: Chapel
+  cost:
+    treasure: 2
+    potion: 0
+  isAttack: false
+  isAction: true
+  isTreasure: false
+  isVictory: false
+  isTrashing: true
+  isReaction: false
+- name: Woodcutter
+  cost:
+    treasure: 3
+    potion: 0
+  isAttack: false
+  isAction: true
+  isTreasure: false
+  isVictory: false
+  isTrashing: false
+  isReaction: false
+  isBuyProvider: true
+othercards:
+- name: Copper
+  orderstring: Copper 0
+  type: Basic Cards
+  cost:
+    treasure: 0
+  isTreasure: true
+- name: Curse
+  type: Basic Cards
+  orderstring: Estate 9
+  cost:
+    treasure: 0
+  isTrashing: true

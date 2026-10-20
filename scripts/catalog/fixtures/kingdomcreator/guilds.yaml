@@ -1,0 +1,15 @@
+name: Guilds
+cards:
+- name: Advisor
+  cost:
+    treasure: 4
+    potion: 0
+  isAttack: false
+  isAction: true
+  isDrawer: true
+  isMultiDrawer: true
+  isTreasure: false
+  isVictory: false
+  isTrashing: false
+  isReaction: false
+othercards: []

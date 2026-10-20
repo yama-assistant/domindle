@@ -1,0 +1,57 @@
+name: Promos
+cards:
+- name: Black Market
+  cost:
+    treasure: 3
+    potion: 0
+  isAction: true
+  isActionSupplier: false
+  isAttack: false
+  isBuySupplier: false
+  isDuration: false
+  isDrawer: false
+  isReaction: false
+  isReserve: false
+  isTrashing: false
+  isTraveller: false
+  isTreasure: false
+  isVictory: false
+- name: Sauna / Avanto
+  cost:
+    treasure: 4
+    potion: 0
+  isAction: true
+  isActionSupplier: true
+  isAttack: false
+  isBuySupplier: false
+  isDuration: false
+  isDrawer: true
+  isReaction: false
+  isReserve: false
+  isTrashing: false
+  isTraveller: false
+  isVictory: false
+events:
+- name: Summon
+  cost:
+    treasure: 5
+    potion: 0
+  isActionSupplier: false
+  isBuySupplier: false
+  isDrawer: false
+  isReaction: false
+  isTrashing: false
+othercards:
+- name: Sauna / Avanto - to hide split card
+  type: Action - Split Cards
+  orderstring: Sauna / Avanto
+- name: Sauna
+  type: Action - Split Cards
+  orderstring: Sauna / Avanto step 1
+  cost:
+    treasure: 4
+- name: Avanto
+  type: Action - Split Cards
+  orderstring: Sauna / Avanto step 2
+  cost:
+    treasure: 5

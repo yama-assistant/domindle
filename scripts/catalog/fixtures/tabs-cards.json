@@ -1,0 +1,197 @@
+[
+  {
+    "card_tag": "Page",
+    "cardset_tags": [
+      "adventures"
+    ],
+    "cost": "2",
+    "count": "10",
+    "group_tag": "Page -> Champion",
+    "group_top": true,
+    "types": [
+      "Action",
+      "Traveller"
+    ]
+  },
+  {
+    "card_tag": "Acolyte",
+    "cardset_tags": [
+      "allies"
+    ],
+    "cost": "4",
+    "count": "4",
+    "group_tag": "Augurs",
+    "randomizer": false,
+    "types": [
+      "Action",
+      "Augur"
+    ]
+  },
+  {
+    "card_tag": "Augurs",
+    "cardset_tags": [
+      "allies"
+    ],
+    "cost": "3*",
+    "count": "0",
+    "group_tag": "Augurs",
+    "group_top": true,
+    "types": [
+      "Action",
+      "Augur"
+    ]
+  },
+  {
+    "card_tag": "Herb Gatherer",
+    "cardset_tags": [
+      "allies"
+    ],
+    "cost": "3",
+    "count": "4",
+    "group_tag": "Augurs",
+    "randomizer": false,
+    "types": [
+      "Action",
+      "Augur"
+    ]
+  },
+  {
+    "card_tag": "Sibyl",
+    "cardset_tags": [
+      "allies"
+    ],
+    "cost": "6",
+    "count": "4",
+    "group_tag": "Augurs",
+    "randomizer": false,
+    "types": [
+      "Action",
+      "Augur"
+    ]
+  },
+  {
+    "card_tag": "Sorceress",
+    "cardset_tags": [
+      "allies"
+    ],
+    "cost": "5",
+    "count": "4",
+    "group_tag": "Augurs",
+    "randomizer": false,
+    "types": [
+      "Action",
+      "Attack",
+      "Augur"
+    ]
+  },
+  {
+    "card_tag": "Tournament",
+    "cardset_tags": [
+      "cornucopia1stEdition",
+      "cornucopia1stEditionRemoved"
+    ],
+    "cost": "4",
+    "group_tag": "Tournament and Prizes",
+    "group_top": true,
+    "types": [
+      "Action"
+    ]
+  },
+  {
+    "card_tag": "Hermit",
+    "cardset_tags": [
+      "darkAges"
+    ],
+    "cost": "3",
+    "group_tag": "Hermit - Madman",
+    "group_top": true,
+    "types": [
+      "Action"
+    ]
+  },
+  {
+    "card_tag": "Knights",
+    "cardset_tags": [
+      "darkAges"
+    ],
+    "cost": "5",
+    "types": [
+      "Action",
+      "Attack",
+      "Knight"
+    ]
+  },
+  {
+    "card_tag": "Cellar",
+    "cardset_tags": [
+      "dominion1stEdition",
+      "dominion2ndEdition"
+    ],
+    "cost": "2",
+    "types": [
+      "Action"
+    ]
+  },
+  {
+    "card_tag": "Harbinger",
+    "cardset_tags": [
+      "dominion2ndEdition",
+      "dominion2ndEditionUpgrade"
+    ],
+    "cost": "3",
+    "count": "10",
+    "types": [
+      "Action"
+    ]
+  },
+  {
+    "card_tag": "Castles",
+    "cardset_tags": [
+      "empires"
+    ],
+    "cost": "3*",
+    "count": "12",
+    "types": [
+      "Victory",
+      "Castle"
+    ]
+  },
+  {
+    "card_tag": "Catapult - Rocks",
+    "cardset_tags": [
+      "empires"
+    ],
+    "cost": "3*",
+    "count": "0",
+    "group_tag": "Catapult - Rocks",
+    "group_top": true,
+    "types": [
+      "Action",
+      "Attack"
+    ]
+  },
+  {
+    "card_tag": "Coppersmith",
+    "cardset_tags": [
+      "intrigue1stEdition",
+      "intrigue1stEditionRemoved"
+    ],
+    "cost": "4",
+    "types": [
+      "Action"
+    ]
+  },
+  {
+    "card_tag": "Sauna - Avanto",
+    "cardset_tags": [
+      "promo"
+    ],
+    "cost": "4*",
+    "count": "0",
+    "group_tag": "Sauna - Avanto",
+    "group_top": true,
+    "types": [
+      "Action"
+    ]
+  }
+]

@@ -1,0 +1,25 @@
+name: Alchemy
+cards:
+- name: Familiar
+  cost:
+    treasure: 3
+    potion: 1
+  isAttack: true
+  isAction: true
+  isTreasure: false
+  isVictory: false
+  isTrashing: false
+  isReaction: false
+othercards:
+- name: Potion
+  type: Basic Cards
+  isTreasure: true
+  cost:
+    treasure: 4
+    potion: 0
+- name: Potion_2nd
+  type: Basic Cards
+  isTreasure: true
+  cost:
+    treasure: 4
+    potion: 0

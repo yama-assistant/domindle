@@ -1,0 +1,29 @@
+name: Menagerie
+cards:
+- name: Black Cat
+  cost:
+    treasure: 2
+    potion: 0
+    debt: 0
+  isAction: true
+  isActionSupplier: false
+  isArtifactSupplier: false
+  isAttack: true
+  isBuySupplier: false
+  isDrawer: true
+  isDoom: false
+  isDuration: false
+  isFate: false
+  isMultiDrawer: true
+  isNight: false
+  isReaction: true
+  isTrashing: false
+  isTreasure: false
+  isTerminal: false
+  isVictory: false
+ways:
+- name: Way of the Butterfly
+events:
+- name: Delay
+  cost:
+    treasure: 0

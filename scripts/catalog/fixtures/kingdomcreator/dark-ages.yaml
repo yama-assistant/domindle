@@ -1,0 +1,37 @@
+name: Dark Ages
+cards:
+- name: Knights
+  cost:
+    treasure: 5
+    potion: 0
+  isAttack: true
+  isAction: true
+  isTreasure: false
+  isVictory: false
+  isTrashing: false
+  isReaction: false
+- name: Hermit
+  cost:
+    treasure: 3
+    potion: 0
+  isAttack: false
+  isAction: true
+  isTreasure: false
+  isVictory: false
+  isTrashing: true
+  isReaction: false
+  isDrawer: true
+  isMultiDrawer: true
+othercards:
+- name: Abandoned Mine
+  type: Ruins
+- name: Madman
+  type: Action - Non-Supply Cards
+- name: Dame Anna
+  type: Action - Attack - Knight
+  cost:
+    treasure: 5
+- name: Sir Martin
+  type: Action - Attack - Knight
+  cost:
+    treasure: 4
