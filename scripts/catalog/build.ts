@@ -215,7 +215,7 @@ export function buildCatalog(upstream: Upstream): CatalogEntry[] {
       id,
       name: c.name,
       answer: c.category === 'Card' && !removed,
-      art: `${id}.jpg`,
+      art: `${id}.webp`,
       expansion: c.expansion,
       edition: c.edition,
       category: c.category,

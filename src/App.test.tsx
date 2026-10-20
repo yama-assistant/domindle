@@ -7,18 +7,18 @@ import { fakeStorage, throwingStorage } from './test/storage'
 
 // Opaque IDs; names only appear in the catalog.
 const catalog: Catalog = [
-  { id: 'a1', name: 'Cellar', answer: true, art: 'a1.jpg' },
-  { id: 'b2', name: 'Chapel', answer: true, art: 'b2.jpg' },
-  { id: 'c3', name: 'Herb Gatherer', answer: true, art: 'c3.jpg' },
-  { id: 'd4', name: 'Séance', answer: true, art: 'd4.jpg' },
-  { id: 'e5', name: 'Market', answer: true, art: 'e5.jpg' },
-  { id: 'f6', name: 'Mine', answer: true, art: 'f6.jpg' },
-  { id: 'g7', name: 'Moat', answer: true, art: 'g7.jpg' },
-  { id: 'h8', name: 'Village', answer: true, art: 'h8.jpg' },
-  { id: 'i9', name: 'Witch', answer: true, art: 'i9.jpg' },
-  { id: 'j10', name: 'Smithy', answer: true, art: 'j10.jpg' },
-  { id: 'k11', name: 'Library', answer: true, art: 'k11.jpg' },
-  { id: 'p0', name: 'Augurs', answer: false, art: 'p0.jpg' },
+  { id: 'a1', name: 'Cellar', answer: true, art: 'a1.webp' },
+  { id: 'b2', name: 'Chapel', answer: true, art: 'b2.webp' },
+  { id: 'c3', name: 'Herb Gatherer', answer: true, art: 'c3.webp' },
+  { id: 'd4', name: 'Séance', answer: true, art: 'd4.webp' },
+  { id: 'e5', name: 'Market', answer: true, art: 'e5.webp' },
+  { id: 'f6', name: 'Mine', answer: true, art: 'f6.webp' },
+  { id: 'g7', name: 'Moat', answer: true, art: 'g7.webp' },
+  { id: 'h8', name: 'Village', answer: true, art: 'h8.webp' },
+  { id: 'i9', name: 'Witch', answer: true, art: 'i9.webp' },
+  { id: 'j10', name: 'Smithy', answer: true, art: 'j10.webp' },
+  { id: 'k11', name: 'Library', answer: true, art: 'k11.webp' },
+  { id: 'p0', name: 'Augurs', answer: false, art: 'p0.webp' },
 ]
 // day 0 = 2026-10-19 → Cellar, day 1 → Chapel, day 2 → Herb Gatherer
 const schedule: AnswerSchedule = { launch: '2026-10-19', answerIds: ['a1', 'b2', 'c3', 'd4'] }
@@ -61,12 +61,12 @@ describe("today's Answer", () => {
         render(<App catalog={catalog} schedule={schedule} now={() => current} storage={fakeStorage()} artBase="/art/" />)
         return { art: () => screen.getByRole('img', { name: /artwork/i }) }
       })()
-      expect(art().getAttribute('src')).toBe('/art/a1.jpg')
+      expect(art().getAttribute('src')).toBe('/art/a1.webp')
       current = new Date('2026-10-20T00:00:01Z')
       act(() => {
         vi.advanceTimersByTime(1000)
       })
-      expect(art().getAttribute('src')).toBe('/art/b2.jpg')
+      expect(art().getAttribute('src')).toBe('/art/b2.webp')
       expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
     } finally {
       vi.useRealTimers()
@@ -75,7 +75,7 @@ describe("today's Answer", () => {
 
   it('uses opaque art file names', () => {
     const { art } = setup()
-    expect(art().getAttribute('src')).toBe('/art/a1.jpg')
+    expect(art().getAttribute('src')).toBe('/art/a1.webp')
   })
 })
 
