@@ -325,6 +325,101 @@ describe('persistence and the Schedule', () => {
   })
 })
 
+describe('stats', () => {
+  const seeded = (entries: { day: string; score: number }[]) =>
+    fakeStorage({ 'domindle.art.history': JSON.stringify(entries) })
+  const openStats = async (s: ReturnType<typeof setup>) => {
+    await s.user.click(screen.getByRole('button', { name: /stats/i }))
+    return screen.getByRole('dialog')
+  }
+  const stat = (scope: HTMLElement, label: string) =>
+    within(scope).getByText(label).closest('div')?.querySelector('dd')?.textContent
+
+  it('shows Days played, Streaks, average Score and a histogram of Scores', async () => {
+    const storage = seeded([
+      { day: '2026-10-15', score: 1 },
+      { day: '2026-10-16', score: 3 },
+      { day: '2026-10-18', score: 3 },
+      { day: '2026-10-19', score: 4 },
+    ])
+    const dialog = await openStats(setup('2026-10-19T12:00:00Z', storage))
+    expect(stat(dialog, 'Days played')).toBe('4')
+    expect(stat(dialog, 'Current streak')).toBe('2')
+    expect(stat(dialog, 'Best streak')).toBe('2')
+    expect(stat(dialog, 'Average score')).toBe('2.8')
+    const bars = within(within(dialog).getByRole('list', { name: /score distribution/i })).getAllByRole('listitem')
+    expect(bars.map((b) => b.getAttribute('aria-label')).slice(0, 4)).toEqual(['1: 1', '2: 0', '3: 2', '4: 1'])
+  })
+
+  it('shows empty stats for a new player', async () => {
+    const dialog = await openStats(setup())
+    expect(stat(dialog, 'Days played')).toBe('0')
+    expect(stat(dialog, 'Current streak')).toBe('0')
+    expect(stat(dialog, 'Average score')).toBe('–')
+  })
+
+  it('keeps the Streak alive while today is still unsolved', async () => {
+    const storage = seeded([
+      { day: '2026-10-17', score: 2 },
+      { day: '2026-10-18', score: 2 },
+    ])
+    const dialog = await openStats(setup('2026-10-19T23:59:59Z', storage))
+    expect(stat(dialog, 'Current streak')).toBe('2')
+  })
+
+  it('resets the Streak when a Day is missed, but remembers the best one', async () => {
+    const storage = seeded([
+      { day: '2026-10-15', score: 2 },
+      { day: '2026-10-16', score: 2 },
+      { day: '2026-10-17', score: 2 },
+    ])
+    const dialog = await openStats(setup('2026-10-19T00:00:00Z', storage))
+    expect(stat(dialog, 'Current streak')).toBe('0')
+    expect(stat(dialog, 'Best streak')).toBe('3')
+  })
+
+  it('extends the Streak when today is solved', async () => {
+    const storage = seeded([{ day: '2026-10-18', score: 2 }])
+    const s = setup('2026-10-19T12:00:00Z', storage)
+    await s.guess('Cellar')
+    expect(screen.getByText(/solved it in 1 guess/i)).toBeInTheDocument()
+    const dialog = await openStats(s)
+    expect(stat(dialog, 'Current streak')).toBe('2')
+    expect(stat(dialog, 'Days played')).toBe('2')
+  })
+
+  it('shows the Score and the stats on the win screen, not before', async () => {
+    const s = setup()
+    await s.guess('Chapel')
+    expect(screen.queryByText(/solved it in/i)).not.toBeInTheDocument()
+    await s.guess('Cellar')
+    expect(screen.getByText('You solved it in 2 guesses!')).toBeInTheDocument()
+    const win = screen.getByText('You solved it in 2 guesses!').parentElement as HTMLElement
+    expect(stat(win, 'Days played')).toBe('1')
+    expect(stat(win, 'Current streak')).toBe('1')
+    expect(stat(win, 'Best streak')).toBe('1')
+    expect(stat(win, 'Average score')).toBe('2.0')
+    expect(within(win).getByRole('list', { name: /score distribution/i })).toBeInTheDocument()
+  })
+
+  it('closes with the button, Escape, or a click outside', async () => {
+    const s = setup()
+    await openStats(s)
+    await s.user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /stats/i })).toHaveFocus()
+    await openStats(s)
+    await s.user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await openStats(s)
+    await s.user.click(screen.getByTestId('backdrop'))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await openStats(s)
+    await s.user.click(screen.getByRole('heading', { name: 'Statistics' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+})
+
 describe("Yesterday's Answer and countdown footer", () => {
   const footer = () => screen.getByTestId('daily-footer')
 
