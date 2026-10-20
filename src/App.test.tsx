@@ -2,7 +2,7 @@ import { act, render, screen, within } from '@testing-library/preact'
 import userEvent from '@testing-library/user-event'
 import { App } from './App'
 import type { AnswerSchedule, Catalog } from './game'
-import type { KeyValueStorage } from './storage'
+import { type KeyValueStorage, loadHistory } from './storage'
 
 // Opaque IDs; names only appear in the catalog.
 const catalog: Catalog = [
@@ -258,6 +258,54 @@ describe('persistence and the Schedule', () => {
     first.unmount()
     setup('2026-10-20T12:00:00Z', storage)
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
+  })
+
+  it('keeps a finished game finished after a reload, with the zoom and Score unchanged', async () => {
+    const storage = fakeStorage()
+    const first = setup('2026-10-19T12:00:00Z', storage)
+    await first.guess('Chapel')
+    await first.guess('Cellar')
+    first.unmount()
+    const again = setup('2026-10-19T13:00:00Z', storage)
+    expect(screen.getByTestId('banner')).toHaveTextContent('Cellar')
+    expect(again.input()).toBeDisabled()
+    expect(again.art().style.transform).toBe('scale(1)')
+    expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
+  })
+
+  it('restores the zoom step after a reload mid-game', async () => {
+    const storage = fakeStorage()
+    const first = setup('2026-10-19T12:00:00Z', storage)
+    await first.guess('Chapel')
+    await first.guess('Market')
+    const zoom = first.art().style.transform
+    first.unmount()
+    expect(setup('2026-10-19T13:00:00Z', storage).art().style.transform).toBe(zoom)
+  })
+
+  it('clears the previous Day\'s unfinished game and records nothing for it', async () => {
+    const storage = fakeStorage()
+    const first = setup('2026-10-19T12:00:00Z', storage)
+    await first.guess('Market')
+    first.unmount()
+    setup('2026-10-20T12:00:00Z', storage)
+    expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
+    expect(loadHistory(storage)).toEqual([])
+  })
+
+  it('records each finished Day once in the history', async () => {
+    const storage = fakeStorage()
+    const d0 = setup('2026-10-19T12:00:00Z', storage)
+    await d0.guess('Cellar')
+    d0.unmount()
+    setup('2026-10-19T14:00:00Z', storage).unmount()
+    const d1 = setup('2026-10-20T12:00:00Z', storage)
+    await d1.guess('Market')
+    await d1.guess('Chapel')
+    expect(loadHistory(storage)).toEqual([
+      { day: '2026-10-19', score: 1 },
+      { day: '2026-10-20', score: 2 },
+    ])
   })
 
   it('is still playable when storage throws', async () => {

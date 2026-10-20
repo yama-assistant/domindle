@@ -10,7 +10,7 @@ import {
   shareText,
   suggestions,
 } from './game'
-import { type KeyValueStorage, loadGuesses, safeStorage, saveGuesses } from './storage'
+import { type KeyValueStorage, loadGuesses, recordFinished, safeStorage, saveGuesses } from './storage'
 import { text } from './text'
 import './style.css'
 
@@ -62,6 +62,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
     const next = [...guessedIds, id]
     setGuessedIds(next)
     saveGuesses(store, day, next)
+    if (id === answer.id) recordFinished(store, day, next.length)
     setQuery('')
   }
   const submitTyped = () => {
