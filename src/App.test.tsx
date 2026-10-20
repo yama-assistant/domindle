@@ -293,6 +293,23 @@ describe('persistence and the Schedule', () => {
     expect(loadHistory(storage)).toEqual([])
   })
 
+  it('really clears the previous Day\'s unfinished game: it does not return if the clock goes back', async () => {
+    const storage = fakeStorage()
+    const first = setup('2026-10-19T12:00:00Z', storage)
+    await first.guess('Market')
+    first.unmount()
+    setup('2026-10-20T12:00:00Z', storage).unmount()
+    setup('2026-10-19T18:00:00Z', storage)
+    expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
+  })
+
+  it('records a finished Day in the history even if the win was saved without it', () => {
+    const storage = fakeStorage()
+    storage.setItem('domindle.art.game', JSON.stringify({ day: '2026-10-19', guesses: ['b2', 'a1'] }))
+    setup('2026-10-19T12:00:00Z', storage)
+    expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
+  })
+
   it('records each finished Day once in the history', async () => {
     const storage = fakeStorage()
     const d0 = setup('2026-10-19T12:00:00Z', storage)

@@ -26,7 +26,7 @@ export function safeStorage(storage: KeyValueStorage | undefined): KeyValueStora
 
 const GAME_KEY = 'domindle.art.game'
 
-/** Today's in-progress game: the Guesses (Card IDs) made on a Day. */
+/** The Guesses (Card IDs) saved for a Day. A game saved for any other Day is over, so it is cleared. */
 export function loadGuesses(storage: KeyValueStorage, day: string): string[] {
   try {
     const saved = JSON.parse(storage.getItem(GAME_KEY) ?? 'null')
