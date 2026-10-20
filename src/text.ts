@@ -8,6 +8,10 @@ export const text = {
   guessButton: 'Guess',
   suggestionsLabel: 'Matching cards',
   wrongGuessesLabel: 'Wrong guesses',
+  shareTitle: 'Domindle Art',
+  shareButton: 'Share',
+  shareCopied: 'Result copied to clipboard!',
+  shareFailed: "Couldn't copy to the clipboard. Your browser may be blocking it.",
   noPuzzle: 'No puzzle today. Come back soon!',
   creditNote: 'Card art © Rio Grande Games. Non-commercial fan project.',
 }

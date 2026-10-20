@@ -51,3 +51,12 @@ export function suggestions(catalog: Catalog, query: string, guessedIds: string[
 export function resolveTyped(options: Catalog, query: string): CatalogEntry | undefined {
   return options.find((c) => normalize(c.name) === normalize(query))
 }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** The spoiler-free result: the Day, one red square per wrong Guess, a green one, and the Score. */
+export function shareText(day: Day, guesses: number, title = 'Domindle Art'): string {
+  const [y, m, d] = day.split('-').map(Number)
+  const squares = '🟥'.repeat(guesses - 1) + '🟩'
+  return `${title} · ${d} ${MONTHS[m - 1]} ${y} ${squares} ${guesses} ${guesses === 1 ? 'guess' : 'guesses'}`
+}
