@@ -23,6 +23,9 @@ export function answerIdFor(schedule: AnswerSchedule, day: Day): string | undefi
   return schedule.answerIds[dayIndex(schedule.launch, day)]
 }
 
+/** The Day's position on a single running count of Days, so Days can be compared and differenced. */
+export const dayNumber = (day: Day): number => Math.round(Date.parse(day) / MS_PER_DAY)
+
 /** The Day `offset` days after `day` (negative for earlier). */
 const shiftDay = (day: Day, offset: number): Day => dayOf(new Date(Date.parse(day) + offset * MS_PER_DAY))
 

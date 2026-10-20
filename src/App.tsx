@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import {
   type AnswerSchedule,
   type Catalog,
@@ -12,7 +12,8 @@ import {
   suggestions,
   yesterdayAnswerIdFor,
 } from './game'
-import { HISTOGRAM_BUCKETS, computeStats } from './stats'
+import { StatsDialog, StatsView } from './Stats'
+import { computeStats } from './stats'
 import { type KeyValueStorage, loadGuesses, loadHistory, recordSolved, safeStorage, saveGuesses } from './storage'
 import { text } from './text'
 import './style.css'
@@ -50,17 +51,6 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
     return () => clearInterval(tick)
   }, [day, now, store])
 
-  // Layout effect so Escape works the moment the pop-up appears.
-  useLayoutEffect(() => {
-    if (!statsOpen) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setStatsOpen(false)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      statsButton.current?.focus()
-    }
-  }, [statsOpen])
-
   const cardById = (id: string) => catalog.find((c) => c.id === id)
   const answerId = answerIdFor(schedule, day)
   const answer = answerId === undefined ? undefined : cardById(answerId)
@@ -89,42 +79,6 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const options = suggestions(catalog, query, guessedIds)
   const origin = originFor(day)
   const stats = computeStats(loadHistory(store), day)
-
-  const statsView = (
-    <div class="stats">
-      <dl>
-        <div>
-          <dt>{text.statPlayed}</dt>
-          <dd>{stats.played}</dd>
-        </div>
-        <div>
-          <dt>{text.statStreak}</dt>
-          <dd>{stats.streak}</dd>
-        </div>
-        <div>
-          <dt>{text.statBestStreak}</dt>
-          <dd>{stats.bestStreak}</dd>
-        </div>
-        <div>
-          <dt>{text.statAverage}</dt>
-          <dd>{stats.averageScore === undefined ? text.noAverage : stats.averageScore.toFixed(1)}</dd>
-        </div>
-      </dl>
-      <ol class="histogram" aria-label={text.histogramLabel}>
-        {stats.histogram.map((count, i) => {
-          const bucket = text.histogramBucket(i + 1, i + 1 === HISTOGRAM_BUCKETS)
-          return (
-            <li key={i} aria-label={text.histogramRow(bucket, count)}>
-              <span class="label">{bucket}</span>
-              <span class="bar" style={{ width: `${(count / Math.max(...stats.histogram, 1)) * 100}%` }}>
-                {count}
-              </span>
-            </li>
-          )
-        })}
-      </ol>
-    </div>
-  )
 
   const recordGuess = (id: string) => {
     const next = [...guessedIds, id]
@@ -212,7 +166,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
       {won && (
         <div class="share">
           <p class="score">{text.scoreLine(guessedIds.indexOf(answer.id) + 1)}</p>
-          {statsView}
+          <StatsView stats={stats} />
           <button type="button" onClick={share}>
             {text.shareButton}
           </button>
@@ -221,23 +175,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
           </p>
         </div>
       )}
-      {statsOpen && (
-        <div class="backdrop" data-testid="backdrop" onClick={() => setStatsOpen(false)}>
-          <div
-            class="dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-label={text.statsTitle}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2>{text.statsTitle}</h2>
-            {statsView}
-            <button type="button" autofocus onClick={() => setStatsOpen(false)}>
-              {text.closeButton}
-            </button>
-          </div>
-        </div>
-      )}
+      {statsOpen && <StatsDialog stats={stats} onClose={() => setStatsOpen(false)} returnFocusTo={statsButton} />}
       {dailyFooter}
       <footer>{text.creditNote}</footer>
     </main>
