@@ -21,7 +21,9 @@ const dayNumber = (day: Day) => Math.round(Date.parse(day) / MS_PER_DAY)
  * Stats from the History. The current Streak is still alive if the latest solved Day is today
  * or yesterday (today can still be solved); any earlier gap has reset it.
  */
-export function computeStats(history: HistoryEntry[], today: Day): Stats {
+export function computeStats(allEntries: HistoryEntry[], today: Day): Stats {
+  // A corrupt History may repeat a Day; the first entry wins, as in recordSolved.
+  const history = allEntries.filter((e, i) => allEntries.findIndex((o) => o.day === e.day) === i)
   const days = [...new Set(history.map((e) => dayNumber(e.day)))].sort((a, b) => a - b)
   let bestStreak = 0
   let run = 0

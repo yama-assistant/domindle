@@ -22,6 +22,7 @@ export const text = {
   noAverage: '–',
   histogramLabel: 'Score distribution',
   histogramBucket: (score: number, last: boolean) => (last ? `${score}+` : `${score}`),
+  histogramRow: (bucket: string, count: number) => `${bucket}: ${count}`,
   scoreLine: (n: number) => `You solved it in ${n} ${n === 1 ? 'guess' : 'guesses'}!`,
   noPuzzle: 'No puzzle today. Come back soon!',
   creditNote: 'Card art © Rio Grande Games. Non-commercial fan project.',

@@ -92,14 +92,17 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
         </div>
       </dl>
       <ol class="histogram" aria-label={text.histogramLabel}>
-        {stats.histogram.map((count, i) => (
-          <li key={i} aria-label={`${text.histogramBucket(i + 1, i + 1 === HISTOGRAM_BUCKETS)}: ${count}`}>
-            <span class="label">{text.histogramBucket(i + 1, i + 1 === HISTOGRAM_BUCKETS)}</span>
-            <span class="bar" style={{ width: `${(count / Math.max(...stats.histogram, 1)) * 100}%` }}>
-              {count}
-            </span>
-          </li>
-        ))}
+        {stats.histogram.map((count, i) => {
+          const bucket = text.histogramBucket(i + 1, i + 1 === HISTOGRAM_BUCKETS)
+          return (
+            <li key={i} aria-label={text.histogramRow(bucket, count)}>
+              <span class="label">{bucket}</span>
+              <span class="bar" style={{ width: `${(count / Math.max(...stats.histogram, 1)) * 100}%` }}>
+                {count}
+              </span>
+            </li>
+          )
+        })}
       </ol>
     </div>
   )
@@ -208,7 +211,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
           >
             <h2>{text.statsTitle}</h2>
             {statsView}
-            <button type="button" onClick={() => setStatsOpen(false)}>
+            <button type="button" autofocus onClick={() => setStatsOpen(false)}>
               {text.closeButton}
             </button>
           </div>
