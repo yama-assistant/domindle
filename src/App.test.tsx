@@ -260,7 +260,7 @@ describe('persistence and the Schedule', () => {
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
   })
 
-  it('keeps a finished game finished after a reload, with the zoom and Score unchanged', async () => {
+  it('keeps a solved game solved after a reload, with the zoom and Score unchanged', async () => {
     const storage = fakeStorage()
     const first = setup('2026-10-19T12:00:00Z', storage)
     await first.guess('Chapel')
@@ -303,14 +303,14 @@ describe('persistence and the Schedule', () => {
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
   })
 
-  it('records a finished Day in the history even if the win was saved without it', () => {
+  it('records a solved Day in the History even if the win was saved without it', () => {
     const storage = fakeStorage()
     storage.setItem('domindle.art.game', JSON.stringify({ day: '2026-10-19', guesses: ['b2', 'a1'] }))
     setup('2026-10-19T12:00:00Z', storage)
     expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
   })
 
-  it('records each finished Day once in the history', async () => {
+  it('records each solved Day once in the history', async () => {
     const storage = fakeStorage()
     const d0 = setup('2026-10-19T12:00:00Z', storage)
     await d0.guess('Cellar')

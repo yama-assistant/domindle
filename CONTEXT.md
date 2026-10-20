@@ -58,5 +58,8 @@ A Card a player submits as their attempt at the Answer. Any Card that can be an 
 **Streak**:
 The number of consecutive Days on which a player solved the Daily Puzzle. A Day not solved by midnight UTC resets it.
 
+**History**:
+The record of every Day a player solved, each with its Score, kept for stats such as the Streak. Days left unsolved are not recorded.
+
 **Day**:
 A calendar date in UTC. The Daily Puzzle changes at midnight UTC.

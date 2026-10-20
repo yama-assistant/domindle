@@ -10,7 +10,7 @@ import {
   shareText,
   suggestions,
 } from './game'
-import { type KeyValueStorage, loadGuesses, recordFinished, safeStorage, saveGuesses } from './storage'
+import { type KeyValueStorage, loadGuesses, recordSolved, safeStorage, saveGuesses } from './storage'
 import { text } from './text'
 import './style.css'
 
@@ -55,7 +55,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
 
   const won = guessedIds.includes(answer.id)
   // Backfills a win whose history write was lost; a Day already recorded is left as it was.
-  if (won) recordFinished(store, day, guessedIds.indexOf(answer.id) + 1)
+  if (won) recordSolved(store, day, guessedIds.indexOf(answer.id) + 1)
   const wrongIds = guessedIds.filter((id) => id !== answer.id)
   const options = suggestions(catalog, query, guessedIds)
   const origin = originFor(day)
@@ -64,7 +64,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
     const next = [...guessedIds, id]
     setGuessedIds(next)
     saveGuesses(store, day, next)
-    if (id === answer.id) recordFinished(store, day, next.length)
+    if (id === answer.id) recordSolved(store, day, next.length)
     setQuery('')
   }
   const submitTyped = () => {
