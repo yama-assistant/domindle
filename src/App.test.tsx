@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { App } from './App'
 import type { AnswerSchedule, Catalog } from './game'
 import { type KeyValueStorage, loadHistory } from './storage'
+import { text } from './text'
 import { fakeStorage, throwingStorage } from './test/storage'
 
 // Opaque IDs; names only appear in the catalog.
@@ -341,7 +342,7 @@ describe('persistence and the Schedule', () => {
       await b.guess('Mine')
       expect(b.input()).toBeDisabled()
       expect(b.banner()).toHaveTextContent('Cellar')
-      expect(within(b.container).getByText(/2/, { selector: '.score' })).toBeInTheDocument()
+      expect(b.container.querySelector('.score')).toHaveTextContent(text.scoreLine(2))
       expect(saved(storage)).toEqual({ day: '2026-10-19', guesses: ['e5', 'a1'] })
       expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
     })
