@@ -24,6 +24,8 @@ export const text = {
   histogramBucket: (score: number, last: boolean) => (last ? `${score}+` : `${score}`),
   histogramRow: (bucket: string, count: number) => `${bucket}: ${count}`,
   scoreLine: (n: number) => `You solved it in ${n} ${n === 1 ? 'guess' : 'guesses'}!`,
+  yesterdaysAnswer: (name: string) => `Yesterday's answer: ${name}`,
+  nextPuzzle: (countdown: string) => `Next puzzle in ${countdown}`,
   noPuzzle: 'No puzzle today. Come back soon!',
   creditNote: 'Card art © Rio Grande Games. Non-commercial fan project.',
 }

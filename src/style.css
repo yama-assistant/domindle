@@ -33,3 +33,4 @@ header button { display: block; padding: 6px 14px; font: inherit; background: #0
 .histogram li { display: flex; gap: 6px; align-items: center; margin-top: 3px; }
 .histogram .label { width: 2em; text-align: right; }
 .histogram .bar { min-width: 1.5em; padding: 0 4px; background: #2a5c3a; color: #fff; border-radius: 3px; text-align: right; }
+.daily-footer { margin: 14px 0 0; text-align: center; font-size: 14px; }

@@ -419,3 +419,75 @@ describe('stats', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 })
+
+describe("Yesterday's Answer and countdown footer", () => {
+  const footer = () => screen.getByTestId('daily-footer')
+
+  /** Renders with a clock the test moves by hand; each tick advances fake timers one second. */
+  function setupTicking(iso: string, sched = schedule) {
+    vi.useFakeTimers()
+    let current = new Date(iso)
+    render(<App catalog={catalog} schedule={sched} now={() => current} storage={fakeStorage()} artBase="/art/" />)
+    return {
+      tickTo(next: string) {
+        current = new Date(next)
+        act(() => {
+          vi.advanceTimersByTime(1000)
+        })
+      },
+    }
+  }
+  afterEach(() => vi.useRealTimers())
+
+  it("shows yesterday's Answer by Card name and the time to midnight UTC", () => {
+    setup('2026-10-20T12:00:00Z')
+    expect(footer()).toHaveTextContent("Yesterday's answer: Cellar · Next puzzle in 12:00:00")
+  })
+
+  it("omits Yesterday's Answer on launch day", () => {
+    setup('2026-10-19T23:59:59Z')
+    expect(footer()).toHaveTextContent('Next puzzle in 00:00:01')
+    expect(footer()).not.toHaveTextContent(/yesterday/i)
+  })
+
+  it('counts down every second', () => {
+    const clock = setupTicking('2026-10-20T12:00:00Z')
+    clock.tickTo('2026-10-20T12:00:01Z')
+    expect(footer()).toHaveTextContent('Next puzzle in 11:59:59')
+  })
+
+  it('loads the new Daily Puzzle and its footer when the countdown hits zero', () => {
+    const clock = setupTicking('2026-10-19T23:59:59Z')
+    expect(footer()).toHaveTextContent('Next puzzle in 00:00:01')
+    clock.tickTo('2026-10-20T00:00:00Z')
+    expect(screen.getByRole('img', { name: /artwork/i }).getAttribute('src')).toBe('/art/b2.webp')
+    expect(footer()).toHaveTextContent("Yesterday's answer: Cellar · Next puzzle in 23:59:59")
+  })
+
+  it('keeps counting down on a Day the Schedule does not cover', () => {
+    const clock = setupTicking('2026-11-30T23:59:58Z')
+    expect(screen.getByText(/no puzzle today/i)).toBeInTheDocument()
+    expect(footer()).toHaveTextContent('Next puzzle in 00:00:02')
+    clock.tickTo('2026-11-30T23:59:59Z')
+    expect(footer()).toHaveTextContent('Next puzzle in 00:00:01')
+  })
+
+  it("omits Yesterday's Answer when that Card is not in the Catalog", () => {
+    render(
+      <App
+        catalog={catalog}
+        schedule={{ launch: '2026-10-19', answerIds: ['gone', 'b2'] }}
+        now={at('2026-10-20T12:00:00Z')}
+        storage={fakeStorage()}
+        artBase="/art/"
+      />,
+    )
+    expect(footer()).toHaveTextContent('Next puzzle in 12:00:00')
+    expect(footer()).not.toHaveTextContent(/yesterday/i)
+  })
+
+  it("omits Yesterday's Answer when the Schedule does not cover yesterday", () => {
+    setup('2026-11-30T12:00:00Z')
+    expect(footer()).not.toHaveTextContent(/yesterday/i)
+  })
+})
