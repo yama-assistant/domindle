@@ -2,7 +2,8 @@ import { act, render, screen, within } from '@testing-library/preact'
 import userEvent from '@testing-library/user-event'
 import { App } from './App'
 import type { AnswerSchedule, Catalog } from './game'
-import type { KeyValueStorage } from './storage'
+import { type KeyValueStorage, loadHistory } from './storage'
+import { fakeStorage, throwingStorage } from './test/storage'
 
 // Opaque IDs; names only appear in the catalog.
 const catalog: Catalog = [
@@ -23,19 +24,6 @@ const catalog: Catalog = [
 const schedule: AnswerSchedule = { launch: '2026-10-19', answerIds: ['a1', 'b2', 'c3', 'd4'] }
 
 const at = (iso: string) => () => new Date(iso)
-
-function fakeStorage(): KeyValueStorage {
-  const data = new Map<string, string>()
-  return { getItem: (k) => data.get(k) ?? null, setItem: (k, v) => void data.set(k, v) }
-}
-const throwingStorage: KeyValueStorage = {
-  getItem: () => {
-    throw new Error('denied')
-  },
-  setItem: () => {
-    throw new Error('denied')
-  },
-}
 
 function setup(iso = '2026-10-19T12:00:00Z', storage: KeyValueStorage = fakeStorage()) {
   const user = userEvent.setup()
@@ -258,6 +246,71 @@ describe('persistence and the Schedule', () => {
     first.unmount()
     setup('2026-10-20T12:00:00Z', storage)
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
+  })
+
+  it('keeps a solved game solved after a reload, with the zoom and Score unchanged', async () => {
+    const storage = fakeStorage()
+    const first = setup('2026-10-19T12:00:00Z', storage)
+    await first.guess('Chapel')
+    await first.guess('Cellar')
+    first.unmount()
+    const again = setup('2026-10-19T13:00:00Z', storage)
+    expect(screen.getByTestId('banner')).toHaveTextContent('Cellar')
+    expect(again.input()).toBeDisabled()
+    expect(again.art().style.transform).toBe('scale(1)')
+    expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
+  })
+
+  it('restores the zoom step after a reload mid-game', async () => {
+    const storage = fakeStorage()
+    const first = setup('2026-10-19T12:00:00Z', storage)
+    await first.guess('Chapel')
+    await first.guess('Market')
+    const zoom = first.art().style.transform
+    first.unmount()
+    expect(setup('2026-10-19T13:00:00Z', storage).art().style.transform).toBe(zoom)
+  })
+
+  it('clears the previous Day\'s unfinished game and records nothing for it', async () => {
+    const storage = fakeStorage()
+    const first = setup('2026-10-19T12:00:00Z', storage)
+    await first.guess('Market')
+    first.unmount()
+    setup('2026-10-20T12:00:00Z', storage)
+    expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
+    expect(loadHistory(storage)).toEqual([])
+  })
+
+  it('really clears the previous Day\'s unfinished game: it does not return if the clock goes back', async () => {
+    const storage = fakeStorage()
+    const first = setup('2026-10-19T12:00:00Z', storage)
+    await first.guess('Market')
+    first.unmount()
+    setup('2026-10-20T12:00:00Z', storage).unmount()
+    setup('2026-10-19T18:00:00Z', storage)
+    expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
+  })
+
+  it('records a solved Day in the History even if the win was saved without it', () => {
+    const storage = fakeStorage()
+    storage.setItem('domindle.art.game', JSON.stringify({ day: '2026-10-19', guesses: ['b2', 'a1'] }))
+    setup('2026-10-19T12:00:00Z', storage)
+    expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
+  })
+
+  it('records each solved Day once in the History', async () => {
+    const storage = fakeStorage()
+    const d0 = setup('2026-10-19T12:00:00Z', storage)
+    await d0.guess('Cellar')
+    d0.unmount()
+    setup('2026-10-19T14:00:00Z', storage).unmount()
+    const d1 = setup('2026-10-20T12:00:00Z', storage)
+    await d1.guess('Market')
+    await d1.guess('Chapel')
+    expect(loadHistory(storage)).toEqual([
+      { day: '2026-10-19', score: 1 },
+      { day: '2026-10-20', score: 2 },
+    ])
   })
 
   it('is still playable when storage throws', async () => {
