@@ -19,8 +19,8 @@ const upstream: Upstream = {
 
 const catalog = buildCatalog(upstream)
 const named = (name: string) => catalog.filter((e) => e.name === name)
-const only = (name: string, category?: CatalogEntry['category']): CatalogEntry => {
-  const found = named(name).filter((e) => !category || e.category === category)
+const only = (name: string): CatalogEntry => {
+  const found = named(name)
   expect(found, `entries named ${name}`).toHaveLength(1)
   return found[0]
 }

@@ -120,6 +120,7 @@ const sameName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '')
 
 type Item = { name: string; type?: string }
 type Candidate = Omit<CatalogEntry, 'id' | 'art' | 'answer'>
+type Classified = Pick<Candidate, 'category' | 'kind' | 'name'> & { expansion?: string }
 
 /**
  * KingdomCreator also lists a pile as an ordinary `cards` row: either next to a "to hide split
@@ -131,14 +132,18 @@ function classify(
   section: string,
   item: Item,
   hidden: Set<string>,
-): Pick<Candidate, 'category' | 'kind' | 'name'> | undefined {
+): Classified | undefined {
   const name = tidy(item.name)
   if (HIDE_SPLIT.test(name)) return { category: 'Pile Placeholder', name: name.replace(HIDE_SPLIT, '') }
   if (section === 'othercards') {
     const type = item.type ?? ''
     if (NOT_CARDS.test(type)) return undefined
     if (type in OTHER_EXTRAS) return { category: 'Extra', kind: OTHER_EXTRAS[type], name }
-    if (type === 'Basic Cards') return { category: 'Card', name: name.replace(/_2nd$/, '').replace(/2$/, '') }
+    if (type === 'Basic Cards') {
+      // "Copper_2nd", "Copper2" and "Copper2_2nd" are alternate artwork of Copper.
+      const basic = name.replace(/_2nd$/, '').replace(/2$/, '')
+      return { category: 'Card', name: basic, expansion: BASIC_EXPANSIONS[basic] ?? 'Base' }
+    }
     return { category: 'Card', name }
   }
   if (section === 'cards' && isTopLevelPile(name, hidden)) return { category: 'Pile Placeholder', name }
@@ -157,6 +162,7 @@ export function buildCatalog(upstream: Upstream): CatalogEntry[] {
     const key = `${candidate.expansion}/${sameName(candidate.name)}`
     const existing = candidates.get(key)
     if (!existing) candidates.set(key, candidate)
+    // Otherwise keep the first-seen name, the higher Edition, and any Pile Placeholder category.
     // A pile name is never also a Card, whichever source says so first.
     else if (candidate.category === 'Pile Placeholder' || candidate.edition > existing.edition)
       candidates.set(key, {
@@ -181,9 +187,7 @@ export function buildCatalog(upstream: Upstream): CatalogEntry[] {
       for (const item of items) {
         const classified = classify(section, item, hidden)
         if (!classified) continue
-        const home = classified.category === 'Card' && BASIC_EXPANSIONS[classified.name]
-        const basic = item.type === 'Basic Cards'
-        add({ ...classified, expansion: basic ? (home || 'Base') : expansion, edition })
+        add({ ...classified, expansion: classified.expansion ?? expansion, edition })
       }
     }
   }
