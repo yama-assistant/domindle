@@ -5,6 +5,7 @@ import {
   answerIdFor,
   countdownTo,
   dayOf,
+  mergeGuess,
   originFor,
   resolveTyped,
   scaleFor,
@@ -37,16 +38,22 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
 
   const [countdown, setCountdown] = useState(() => countdownTo(now()))
 
+  // Moves to the current Day if this tab is still on an earlier one; true when it did.
+  const rollOver = (current: Date) => {
+    const today = dayOf(current)
+    if (today === day) return false
+    setDay(today)
+    setGuessedIds(loadGuesses(store, today))
+    setQuery('')
+    setShareStatus(undefined)
+    return true
+  }
+
   useEffect(() => {
     const tick = setInterval(() => {
       const current = now()
       setCountdown(countdownTo(current))
-      const today = dayOf(current)
-      if (today === day) return
-      setDay(today)
-      setGuessedIds(loadGuesses(store, today))
-      setQuery('')
-      setShareStatus(undefined)
+      rollOver(current)
     }, 1000)
     return () => clearInterval(tick)
   }, [day, now, store])
@@ -81,10 +88,14 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const stats = computeStats(loadHistory(store), day)
 
   const recordGuess = (id: string) => {
-    const next = [...guessedIds, id]
+    // A tab whose timer hasn't fired yet must not save its old Day's Guesses over the new Day's game;
+    // the Guess was for the old Day's puzzle, so it is dropped and the player guesses again.
+    if (rollOver(now())) return
+    // Another tab may have saved Guesses (or the win) since this one loaded, so merge with what is saved.
+    const next = mergeGuess(loadGuesses(store, day), guessedIds, id, answer.id)
     setGuessedIds(next)
     saveGuesses(store, day, next)
-    if (id === answer.id) recordSolved(store, day, next.length)
+    if (next.includes(answer.id)) recordSolved(store, day, next.indexOf(answer.id) + 1)
     setQuery('')
   }
   const submitTyped = () => {
