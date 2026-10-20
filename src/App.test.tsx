@@ -370,6 +370,21 @@ describe('persistence and the Schedule', () => {
       expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 1 }])
     })
 
+    it('does not overwrite the new Day\'s game from a tab that has not yet rolled over', async () => {
+      const storage = fakeStorage()
+      let current = new Date('2026-10-19T23:59:59Z')
+      const stale = render(<App catalog={catalog} schedule={schedule} now={() => current} storage={storage} artBase="/art/" />)
+      const staleRoot = stale.container as HTMLElement
+      // Another tab already rolled over to Day 1 and guessed there.
+      storage.setItem(KEY, JSON.stringify({ day: '2026-10-20', guesses: ['a1'] }))
+      current = new Date('2026-10-20T00:00:01Z')
+      const user = userEvent.setup()
+      await user.type(within(staleRoot).getByRole('combobox', { name: /guess the card/i }), 'Market')
+      await user.keyboard('{Enter}')
+      expect(saved(storage)).toEqual({ day: '2026-10-20', guesses: ['a1'] })
+      expect(within(staleRoot).getByTestId('banner')).toHaveTextContent('Guess 2')
+    })
+
     it('keeps this tab\'s Guesses when storage cannot be read', async () => {
       const a = tab(throwingStorage)
       await a.guess('Market')
