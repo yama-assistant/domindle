@@ -1,5 +1,7 @@
 # Append-only Answer Schedule
 
+Superseded by [0002](0002-answer-formula-replaces-stored-schedule.md).
+
 Each Mode's Answers are assigned to Days by a stored Answer Schedule that is only ever extended. Picking the Answer by shuffling the Catalog with a fixed seed and indexing by date would be simpler, but every Catalog change (a new Expansion, a fixed entry) would reshuffle it: past Days would get new Answers and Cards would repeat. Future global stats and shared results need a Day to mean the same Answer forever. So new Cards are shuffled into future Days only, and past Days are never rewritten.
 
 ## Consequences

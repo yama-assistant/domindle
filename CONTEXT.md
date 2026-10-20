@@ -49,8 +49,8 @@ The one puzzle of a given Mode for a given calendar day, identical for every pla
 The Card a Daily Puzzle is asking for. Any Card except a Removed Card can be an Answer.
 _Avoid_: Solution, target
 
-**Answer Schedule**:
-The fixed assignment of Answers to Days. Only ever extended: new Cards go into future Days, past Days never change.
+**Answer Formula**:
+The rule that derives a Day's Answer from the Day and the Catalog, with nothing stored. Days are drawn independently, except that a Day's Answer is never the previous Day's. A Catalog change may change the Answer of Days, past ones included.
 
 **Guess**:
 A Card a player submits as their attempt at the Answer. Any Card that can be an Answer can be Guessed. Guesses are unlimited; a player's **Score** is the number of Guesses they needed.
