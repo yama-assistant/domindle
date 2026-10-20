@@ -1,9 +1,7 @@
-import type { AnswerSchedule, Catalog, Day } from '../../src/game.ts'
+import { dayIndex, type AnswerSchedule, type Catalog, type Day } from '../../src/game.ts'
 
 /** The Schedule is kept at least this many Days past today. */
 export const MIN_FUTURE_DAYS = 365
-
-const MS_PER_DAY = 86_400_000
 
 export type BuildInput = {
   /** The committed Schedule, or undefined on the very first build. */
@@ -36,7 +34,7 @@ export function buildSchedule({ schedule, catalog, today, launch, random = Math.
   const pool = catalog.filter((c) => c.answer).map((c) => c.id)
   if (pool.length === 0) throw new Error('The Catalog has no Answers to schedule')
 
-  const todayIndex = Math.round((Date.parse(today) - Date.parse(launchDay)) / MS_PER_DAY)
+  const todayIndex = dayIndex(launchDay, today)
   if (existing.length > 0 && existing.length <= todayIndex) {
     throw new Error(
       `The Schedule ends on day ${existing.length - 1} but today is day ${todayIndex}: ` +
@@ -66,6 +64,5 @@ export function buildSchedule({ schedule, catalog, today, launch, random = Math.
 
 /** How many Days after today the Schedule covers. */
 export function futureDays(schedule: AnswerSchedule, today: Day): number {
-  const todayIndex = Math.round((Date.parse(today) - Date.parse(schedule.launch)) / MS_PER_DAY)
-  return schedule.answerIds.length - 1 - todayIndex
+  return schedule.answerIds.length - 1 - dayIndex(schedule.launch, today)
 }

@@ -1,3 +1,4 @@
+import { dayIndex, dayOf } from '../game'
 import catalog from './catalog.json'
 import schedule from './schedule.json'
 
@@ -8,8 +9,13 @@ describe('the committed Catalog', () => {
     expect(new Set(answers).size).toBe(answers.length)
   })
 
-  it('keeps every scheduled Answer resolvable as an Answer', () => {
-    for (const id of schedule.answerIds) expect(catalog.find((e) => e.id === id)?.answer, id).toBe(true)
+  it('keeps every scheduled Answer resolvable, and future ones guessable', () => {
+    const today = dayOf(new Date())
+    schedule.answerIds.forEach((id, i) => {
+      const entry = catalog.find((e) => e.id === id)
+      expect(entry, id).toBeDefined()
+      if (i > dayIndex(schedule.launch, today)) expect(entry?.answer, id).toBe(true)
+    })
   })
 
   it('starts the Schedule at launch with no Card repeated within the first cycle', () => {
