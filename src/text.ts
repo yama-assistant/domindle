@@ -12,6 +12,8 @@ export const text = {
   shareButton: 'Share',
   shareCopied: 'Result copied to clipboard!',
   shareFailed: "Couldn't copy to the clipboard. Your browser may be blocking it.",
+  yesterdaysAnswer: (name: string) => `Yesterday's answer: ${name}`,
+  nextPuzzle: (countdown: string) => `Next puzzle in ${countdown}`,
   noPuzzle: 'No puzzle today. Come back soon!',
   creditNote: 'Card art © Rio Grande Games. Non-commercial fan project.',
 }

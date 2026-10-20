@@ -21,6 +21,23 @@ export function answerIdFor(schedule: AnswerSchedule, day: Day): string | undefi
   return schedule.answerIds[index]
 }
 
+/** The Day `offset` days after `day` (negative for earlier). */
+const shiftDay = (day: Day, offset: number): Day => dayOf(new Date(Date.parse(day) + offset * MS_PER_DAY))
+
+/** The previous Day's Answer Card ID, or undefined on launch day (no earlier Day in the Schedule). */
+export function yesterdayAnswerIdFor(schedule: AnswerSchedule, day: Day): string | undefined {
+  const yesterday = shiftDay(day, -1)
+  return yesterday < schedule.launch ? undefined : answerIdFor(schedule, yesterday)
+}
+
+/** The time left until midnight UTC as HH:MM:SS; a full Day left (the first instant of a Day) reads 23:59:59, never 24:00:00. */
+export function countdownTo(now: Date): string {
+  const secondsLeft = Math.floor((Date.parse(shiftDay(dayOf(now), 1)) - now.getTime()) / 1000)
+  const seconds = Math.min(secondsLeft, MS_PER_DAY / 1000 - 1)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(Math.floor(seconds / 3600))}:${pad(Math.floor(seconds / 60) % 60)}:${pad(seconds % 60)}`
+}
+
 export const scaleFor = (wrongGuesses: number) =>
   START_SCALE ** (1 - Math.min(wrongGuesses, MAX_STEPS) / MAX_STEPS)
 
