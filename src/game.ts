@@ -82,3 +82,13 @@ export function shareText(day: Day, guesses: number, title = 'Domindle Art'): st
   const squares = '🟥'.repeat(guesses - 1) + '🟩'
   return `${title} · ${d} ${MONTHS[m - 1]} ${y} ${squares} ${guesses} ${guesses === 1 ? 'guess' : 'guesses'}`
 }
+
+/**
+ * The Guesses to save when a tab makes `newGuess`, given what is already saved and what this tab holds.
+ * A saved game that already holds the Answer wins as-is (another tab solved the Day), so the new Guess is dropped.
+ * Otherwise: saved Guesses first, then this tab's unsaved ones, then the new Guess, without duplicates.
+ */
+export function mergeGuess(stored: string[], inMemory: string[], newGuess: string, answerId: string): string[] {
+  if (stored.includes(answerId)) return stored
+  return [...new Set([...stored, ...inMemory, newGuess])]
+}

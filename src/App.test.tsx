@@ -313,6 +313,71 @@ describe('persistence and the Schedule', () => {
     ])
   })
 
+  describe('with two tabs open on the same Day', () => {
+    const KEY = 'domindle.art.game'
+    const saved = (storage: KeyValueStorage) => JSON.parse(storage.getItem(KEY) ?? 'null')
+    const iso = '2026-10-19T12:00:00Z'
+    const tab = (storage: KeyValueStorage) => {
+      const view = render(<App catalog={catalog} schedule={schedule} now={at(iso)} storage={storage} artBase="/art/" />)
+      const root = view.container as HTMLElement
+      const user = userEvent.setup()
+      const input = () => within(root).getByRole('combobox', { name: /guess the card/i })
+      const guess = async (name: string) => {
+        await user.clear(input())
+        await user.type(input(), name)
+        await user.keyboard('{Enter}')
+      }
+      const banner = () => within(root).getByTestId('banner')
+      const wrong = () => within(root).getAllByRole('listitem').map((l) => l.textContent)
+      return { input, guess, banner, wrong, container: root }
+    }
+
+    it('locks the stale tab on its next Guess, showing the other tab\'s game and Score', async () => {
+      const storage = fakeStorage()
+      const a = tab(storage)
+      const b = tab(storage)
+      await a.guess('Market')
+      await a.guess('Cellar')
+      await b.guess('Mine')
+      expect(b.input()).toBeDisabled()
+      expect(b.banner()).toHaveTextContent('Cellar')
+      expect(within(b.container).getByText(/2/, { selector: '.score' })).toBeInTheDocument()
+      expect(saved(storage)).toEqual({ day: '2026-10-19', guesses: ['e5', 'a1'] })
+      expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
+    })
+
+    it('does not lose Guesses made in the other tab', async () => {
+      const storage = fakeStorage()
+      const a = tab(storage)
+      const b = tab(storage)
+      await a.guess('Market')
+      await b.guess('Mine')
+      expect(saved(storage).guesses).toEqual(['e5', 'f6'])
+      expect(b.wrong()).toEqual(['Mine', 'Market'])
+      await a.guess('Moat')
+      expect(saved(storage).guesses).toEqual(['e5', 'f6', 'g7'])
+    })
+
+    it('keeps the saved Score and the History Score in agreement', async () => {
+      const storage = fakeStorage()
+      const a = tab(storage)
+      const b = tab(storage)
+      await a.guess('Cellar')
+      await b.guess('Cellar')
+      expect(b.input()).toBeDisabled()
+      expect(saved(storage).guesses).toEqual(['a1'])
+      expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 1 }])
+    })
+
+    it('keeps this tab\'s Guesses when storage cannot be read', async () => {
+      const a = tab(throwingStorage)
+      await a.guess('Market')
+      await a.guess('Mine')
+      expect(a.wrong()).toEqual(['Mine', 'Market'])
+      expect(a.banner()).toHaveTextContent('Guess 3')
+    })
+  })
+
   it('is still playable when storage throws', async () => {
     const { guess } = setup('2026-10-19T12:00:00Z', throwingStorage)
     await guess('Chapel')

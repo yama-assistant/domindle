@@ -1,4 +1,4 @@
-import { countdownTo, yesterdayAnswerIdFor } from './game'
+import { countdownTo, mergeGuess, yesterdayAnswerIdFor } from './game'
 
 describe('countdownTo', () => {
   it.each([
@@ -29,5 +29,27 @@ describe('yesterdayAnswerIdFor', () => {
 
   it('is undefined past the end of the Schedule', () => {
     expect(yesterdayAnswerIdFor(schedule, '2026-12-01')).toBeUndefined()
+  })
+})
+
+describe('mergeGuess', () => {
+  it('appends the new Guess when nothing else was saved', () => {
+    expect(mergeGuess([], ['x'], 'y', 'ans')).toEqual(['x', 'y'])
+  })
+
+  it('puts stored Guesses first, then this tab\'s unsaved ones, then the new Guess', () => {
+    expect(mergeGuess(['s1', 's2'], ['s1', 'm1'], 'n', 'ans')).toEqual(['s1', 's2', 'm1', 'n'])
+  })
+
+  it('drops duplicates', () => {
+    expect(mergeGuess(['a', 'b'], ['b', 'a'], 'a', 'ans')).toEqual(['a', 'b'])
+  })
+
+  it('adopts a stored game that already holds the Answer, dropping this tab\'s Guesses', () => {
+    expect(mergeGuess(['s1', 'ans'], ['m1', 'm2'], 'n', 'ans')).toEqual(['s1', 'ans'])
+  })
+
+  it('keeps the in-memory Guesses when nothing could be read', () => {
+    expect(mergeGuess([], ['m1', 'm2'], 'n', 'ans')).toEqual(['m1', 'm2', 'n'])
   })
 })

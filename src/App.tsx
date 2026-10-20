@@ -5,6 +5,7 @@ import {
   answerIdFor,
   countdownTo,
   dayOf,
+  mergeGuess,
   originFor,
   resolveTyped,
   scaleFor,
@@ -81,10 +82,11 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const stats = computeStats(loadHistory(store), day)
 
   const recordGuess = (id: string) => {
-    const next = [...guessedIds, id]
+    // Another tab may have saved Guesses (or the win) since this one loaded, so merge with what is saved.
+    const next = mergeGuess(loadGuesses(store, day), guessedIds, id, answer.id)
     setGuessedIds(next)
     saveGuesses(store, day, next)
-    if (id === answer.id) recordSolved(store, day, next.length)
+    if (next.includes(answer.id)) recordSolved(store, day, next.indexOf(answer.id) + 1)
     setQuery('')
   }
   const submitTyped = () => {
