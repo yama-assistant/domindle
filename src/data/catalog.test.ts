@@ -2,6 +2,7 @@ import { answerFor } from '../answer'
 import { LAUNCH_DAY, shiftDay } from '../game'
 import catalog from './catalog.json'
 
+/** About ten years of Days from launch. */
 const DAYS_CHECKED = 3650
 
 describe('the committed Catalog', () => {
