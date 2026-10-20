@@ -15,10 +15,12 @@ const MS_PER_DAY = 86_400_000
 /** The UTC Day as YYYY-MM-DD. */
 export const dayOf = (now: Date): Day => now.toISOString().slice(0, 10)
 
+/** How many Days after the launch Day (day 0) a Day is. */
+export const dayIndex = (launch: Day, day: Day): number => Math.round((Date.parse(day) - Date.parse(launch)) / MS_PER_DAY)
+
 /** The Answer's Card ID for a Day, or undefined when the Schedule doesn't cover it. */
 export function answerIdFor(schedule: AnswerSchedule, day: Day): string | undefined {
-  const index = Math.round((Date.parse(day) - Date.parse(schedule.launch)) / MS_PER_DAY)
-  return schedule.answerIds[index]
+  return schedule.answerIds[dayIndex(schedule.launch, day)]
 }
 
 /** The Day `offset` days after `day` (negative for earlier). */
