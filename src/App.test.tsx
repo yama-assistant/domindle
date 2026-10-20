@@ -2,7 +2,7 @@ import { act, render, screen, within } from '@testing-library/preact'
 import userEvent from '@testing-library/user-event'
 import { App } from './App'
 import { answerFor } from './answer'
-import type { Catalog } from './game'
+import { type Catalog, LAUNCH_DAY } from './game'
 import { type KeyValueStorage, loadHistory } from './storage'
 import { text } from './text'
 import { fakeStorage, throwingStorage } from './test/storage'
@@ -23,7 +23,7 @@ const catalog: Catalog = [
   { id: 'p0', name: 'Augurs', answer: false, art: 'p0.webp' },
 ]
 
-const LAUNCH = '2026-10-19'
+const LAUNCH = LAUNCH_DAY
 const NEXT = '2026-10-20'
 // The Answers come from the formula; `W[i]` are Cards that are the Answer on neither of the first two Days.
 const A0 = answerFor(catalog, LAUNCH)!
