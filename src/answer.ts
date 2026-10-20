@@ -26,9 +26,11 @@ function winner(candidates: Catalog, day: Day): CatalogEntry | undefined {
 /**
  * The Day's Answer: among the Cards that can be Answers, the one with the highest hash wins,
  * excluding the previous Day's winner (unless that leaves no Card). Undefined only when no Card can be an Answer.
+ * The previous Day's winner is computed without its own exclusion, so nothing needs storing; the price is that a
+ * Day can rarely (about once per N² Days) repeat the previous Day's published Answer.
  */
 export function answerFor(catalog: Catalog, day: Day): CatalogEntry | undefined {
   const pool = catalog.filter((c) => c.answer)
   const yesterday = winner(pool, shiftDay(day, -1))
-  return winner(pool.filter((c) => c !== yesterday), day) ?? yesterday
+  return winner(pool.filter((c) => c.id !== yesterday?.id), day) ?? yesterday
 }
