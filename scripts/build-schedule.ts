@@ -4,7 +4,7 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dayOf, type AnswerSchedule, type Catalog, type Day } from '../src/game.ts'
-import { buildSchedule, futureDays } from './schedule/build.ts'
+import { assertFutureDays, buildSchedule, futureDays } from './schedule/build.ts'
 
 /** Day 0. Only used when there is no Schedule yet; afterwards the Schedule's own launch Day stands. */
 const LAUNCH: Day = '2026-10-19'
@@ -14,6 +14,13 @@ const catalog: Catalog = JSON.parse(readFileSync(new URL('../src/data/catalog.js
 const existing: AnswerSchedule | undefined = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : undefined
 
 const today = dayOf(new Date())
+if (process.argv.includes('--check')) {
+  if (!existing) throw new Error('There is no Schedule yet; run npm run build:schedule')
+  assertFutureDays(existing, today)
+  console.log(`${futureDays(existing, today)} future Days remain`)
+  process.exit(0)
+}
+
 const schedule = buildSchedule({ schedule: existing, catalog, today, launch: LAUNCH })
 
 writeFileSync(path, JSON.stringify(schedule, null, 1) + '\n')

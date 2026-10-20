@@ -1,7 +1,7 @@
 // @vitest-environment node
 import type { AnswerSchedule, Catalog } from '../../src/game.ts'
 import { answerIdFor } from '../../src/game.ts'
-import { buildSchedule, futureDays, MIN_FUTURE_DAYS } from './build.ts'
+import { assertFutureDays, buildSchedule, futureDays, MIN_FUTURE_DAYS } from './build.ts'
 
 const card = (id: string, answer = true) => ({ id, name: id, answer, art: `${id}.webp` })
 const catalogOf = (...ids: string[]): Catalog => ids.map((id) => card(id))
@@ -59,7 +59,23 @@ describe('extending', () => {
   })
 })
 
+describe('shuffling', () => {
+  it('orders new Cards differently for different random sources', () => {
+    const catalog = catalogOf(...'abcdefghij'.split(''))
+    const orders = [1, 2, 3].map((seed) => build({ catalog, random: seeded(seed) }).answerIds.slice(0, 10).join(''))
+    expect(new Set(orders).size).toBeGreaterThan(1)
+  })
+})
+
 describe('cycles', () => {
+  it('does not schedule a Card removed from the Answer pool mid-cycle, but keeps its past Day', () => {
+    const base: AnswerSchedule = { launch: LAUNCH, answerIds: ['a', 'b'] }
+    const { answerIds } = build({ schedule: base, catalog: catalogOf('a', 'c', 'd') })
+    expect(answerIds.slice(0, 2)).toEqual(['a', 'b'])
+    expect(answerIds.slice(2)).not.toContain('b')
+    expect(new Set(answerIds.slice(2, 4))).toEqual(new Set(['c', 'd']))
+  })
+
   it('repeats no Card until every Card in the pool has been used', () => {
     const catalog = catalogOf('a', 'b', 'c', 'd', 'e')
     const { answerIds } = build({ catalog })
@@ -95,8 +111,14 @@ describe('failing', () => {
     expect(() => build({ catalog: [card('x', false)] })).toThrow(/no Answers/)
   })
 
-  it('reports fewer future Days than a year when the Schedule is short', () => {
-    expect(futureDays({ launch: LAUNCH, answerIds: ['a', 'b', 'c'] }, LAUNCH)).toBe(2)
+  it('fails the check when fewer than a year of future Days remain', () => {
+    expect(() => assertFutureDays({ launch: LAUNCH, answerIds: ['a', 'b', 'c'] }, LAUNCH)).toThrow(/Only 2 future Days/)
+  })
+
+  it('passes the check when a year or more remains, and fails once time has eaten into it', () => {
+    const schedule = build()
+    expect(() => assertFutureDays(schedule, LAUNCH)).not.toThrow()
+    expect(() => assertFutureDays(schedule, '2026-10-20')).toThrow(/future Days/)
   })
 })
 

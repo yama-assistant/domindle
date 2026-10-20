@@ -10,7 +10,8 @@
     "test": "vitest run",
     "build:catalog": "node scripts/build-catalog.ts",
     "build:art": "node scripts/build-art.ts",
-    "build:schedule": "node scripts/build-schedule.ts"
+    "build:schedule": "node scripts/build-schedule.ts",
+    "check:schedule": "node scripts/build-schedule.ts --check"
   },
   "dependencies": {
     "preact": "^11.0.1"

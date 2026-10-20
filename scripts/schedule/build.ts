@@ -27,6 +27,7 @@ function shuffled<T>(items: T[], random: () => number): T[] {
 /**
  * Extends the Answer Schedule so at least MIN_FUTURE_DAYS Days after today are covered.
  * Existing entries are kept as they are; new entries only ever go on the end.
+ * On the first build (no Schedule) every Day from launch is filled, which is how a launch in the past is bootstrapped.
  */
 export function buildSchedule({ schedule, catalog, today, launch, random = Math.random }: BuildInput): AnswerSchedule {
   const launchDay = schedule?.launch ?? launch
@@ -65,4 +66,11 @@ export function buildSchedule({ schedule, catalog, today, launch, random = Math.
 /** How many Days after today the Schedule covers. */
 export function futureDays(schedule: AnswerSchedule, today: Day): number {
   return schedule.answerIds.length - 1 - dayIndex(schedule.launch, today)
+}
+
+/** Fails when fewer than MIN_FUTURE_DAYS Days after today are covered, so a Schedule running low is noticed before it runs out. */
+export function assertFutureDays(schedule: AnswerSchedule, today: Day): void {
+  const remaining = futureDays(schedule, today)
+  if (remaining < MIN_FUTURE_DAYS)
+    throw new Error(`Only ${remaining} future Days remain in the Schedule (need ${MIN_FUTURE_DAYS}); run npm run build:schedule`)
 }
