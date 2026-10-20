@@ -4,7 +4,7 @@ import { shiftDay, type Catalog, type CatalogEntry, type Day } from './game'
 const SALT = 'domindle'
 
 /** 32-bit FNV-1a with a murmur3 finalizer, since FNV alone mixes the last characters (where IDs differ) poorly. Fixed forever: changing it changes every Answer. */
-function fnv1a(text: string): number {
+function hashText(text: string): number {
   let h = 2166136261
   for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619)
   h = Math.imul(h ^ (h >>> 16), 0x85ebca6b)
@@ -14,13 +14,12 @@ function fnv1a(text: string): number {
 
 /** The Card with the highest hash for a Day; equal hashes go to the lower ID so Catalog order never matters. */
 function winner(candidates: Catalog, day: Day): CatalogEntry | undefined {
-  let best: CatalogEntry | undefined
-  let bestHash = -1
-  for (const c of candidates) {
-    const h = fnv1a(`${SALT}:${day}:${c.id}`)
-    if (h > bestHash || (h === bestHash && best && c.id < best.id)) [best, bestHash] = [c, h]
+  let best: { card: CatalogEntry; hash: number } | undefined
+  for (const card of candidates) {
+    const hash = hashText(`${SALT}:${day}:${card.id}`)
+    if (!best || hash > best.hash || (hash === best.hash && card.id < best.card.id)) best = { card, hash }
   }
-  return best
+  return best?.card
 }
 
 /**

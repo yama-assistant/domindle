@@ -11,6 +11,7 @@ Picking by index (`ids[hash(day) mod N]`) was rejected because any change to the
 ## Consequences
 
 - A Catalog change can change the Answer of any Day, including today's and yesterday's. Deploy Catalog changes just after midnight UTC where possible. A wrong "Yesterday's answer" after such a deploy is accepted.
+- The previous Day's winner is computed without its own exclusion, so in rare cases (about once per N² Days) a Day repeats the previous Day's published Answer. Accepted.
 - Cards can repeat on non-adjacent Days; there is no cycle guaranteeing every Card appears before any repeats.
 - The formula and salt ship in the client, so anyone determined can compute future Answers.
 - Removing a Card from the pool only changes the Days it won.

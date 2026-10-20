@@ -8,8 +8,7 @@ const days = (n: number) => Array.from({ length: n }, (_, i) => shiftDay(START, 
 
 describe('answerFor', () => {
   it('gives the same Answer for the same Catalog and Day', () => {
-    const catalog = pool(20)
-    for (const day of days(50)) expect(answerFor(catalog, day)).toBe(answerFor(catalog, day))
+    for (const day of days(50)) expect(answerFor(pool(20), day)).toEqual(answerFor(pool(20), day))
   })
 
   it('only ever picks Cards that can be Answers', () => {
@@ -35,7 +34,7 @@ describe('answerFor', () => {
   it('does not depend on the Catalog\'s order', () => {
     const catalog = pool(30)
     const reversed = [...catalog].reverse()
-    const shuffled = [...catalog].sort((a, b) => ((a.id.length * 7 + a.id.charCodeAt(4)) % 5) - ((b.id.length * 7 + b.id.charCodeAt(4)) % 5))
+    const shuffled = [...catalog.filter((_, i) => i % 2 === 0), ...catalog.filter((_, i) => i % 2 === 1)]
     for (const day of days(200)) {
       expect(answerFor(reversed, day)?.id).toBe(answerFor(catalog, day)?.id)
       expect(answerFor(shuffled, day)?.id).toBe(answerFor(catalog, day)?.id)
