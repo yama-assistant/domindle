@@ -12,6 +12,11 @@ describe('the committed Catalog', () => {
     for (const id of schedule.answerIds) expect(catalog.find((e) => e.id === id)?.answer, id).toBe(true)
   })
 
+  it('starts the Schedule at launch with no Card repeated within the first cycle', () => {
+    const days = schedule.answerIds.slice(0, catalog.filter((e) => e.answer).length)
+    expect(new Set(days).size).toBe(days.length)
+  })
+
   it('never lets a Pile Placeholder, Landscape, Extra or Removed Card be an Answer', () => {
     for (const e of catalog)
       if (e.category !== 'Card' || e.removed) expect(e.answer, e.name).toBe(false)
