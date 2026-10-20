@@ -60,7 +60,7 @@ describe('categories', () => {
     expect(new Set(ids).size).toBe(ids.length)
     for (const e of catalog) {
       expect(e.id).toMatch(/^[0-9a-f]{12}$/)
-      expect(e.art).toBe(`${e.id}.jpg`)
+      expect(e.art).toBe(`${e.id}.webp`)
     }
   })
 
