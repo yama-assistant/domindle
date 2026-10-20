@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { App } from './App'
 import type { AnswerSchedule, Catalog } from './game'
 import { type KeyValueStorage, loadHistory } from './storage'
+import { fakeStorage, throwingStorage } from './test/storage'
 
 // Opaque IDs; names only appear in the catalog.
 const catalog: Catalog = [
@@ -23,19 +24,6 @@ const catalog: Catalog = [
 const schedule: AnswerSchedule = { launch: '2026-10-19', answerIds: ['a1', 'b2', 'c3', 'd4'] }
 
 const at = (iso: string) => () => new Date(iso)
-
-function fakeStorage(): KeyValueStorage {
-  const data = new Map<string, string>()
-  return { getItem: (k) => data.get(k) ?? null, setItem: (k, v) => void data.set(k, v) }
-}
-const throwingStorage: KeyValueStorage = {
-  getItem: () => {
-    throw new Error('denied')
-  },
-  setItem: () => {
-    throw new Error('denied')
-  },
-}
 
 function setup(iso = '2026-10-19T12:00:00Z', storage: KeyValueStorage = fakeStorage()) {
   const user = userEvent.setup()
@@ -310,7 +298,7 @@ describe('persistence and the Schedule', () => {
     expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
   })
 
-  it('records each solved Day once in the history', async () => {
+  it('records each solved Day once in the History', async () => {
     const storage = fakeStorage()
     const d0 = setup('2026-10-19T12:00:00Z', storage)
     await d0.guess('Cellar')

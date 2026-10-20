@@ -54,7 +54,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   }
 
   const won = guessedIds.includes(answer.id)
-  // Backfills a win whose history write was lost; a Day already recorded is left as it was.
+  // Backfills a win whose History write was lost; a Day already recorded is left as it was.
   if (won) recordSolved(store, day, guessedIds.indexOf(answer.id) + 1)
   const wrongIds = guessedIds.filter((id) => id !== answer.id)
   const options = suggestions(catalog, query, guessedIds)

@@ -42,7 +42,11 @@ export function loadGuesses(storage: KeyValueStorage, day: string): string[] {
   if (!saved) return []
   if (saved.day === day && Array.isArray(saved.guesses)) return saved.guesses.filter((g) => typeof g === 'string')
   // The interface has no removeItem, so a cleared game is stored as JSON null.
-  storage.setItem(GAME_KEY, 'null')
+  try {
+    storage.setItem(GAME_KEY, 'null')
+  } catch {
+    // Failing to clear is harmless: the stale game is ignored on every load.
+  }
   return []
 }
 
@@ -57,7 +61,7 @@ export type HistoryEntry = { day: string; score: number }
 export function loadHistory(storage: KeyValueStorage): HistoryEntry[] {
   const saved = readJson(storage, HISTORY_KEY)
   if (!Array.isArray(saved)) return []
-  return saved.filter((e) => typeof e?.day === 'string' && Number.isInteger(e.score))
+  return saved.filter((e) => typeof e?.day === 'string' && Number.isInteger(e.score) && e.score >= 1)
 }
 
 /** Records a solved Day; a Day already in the History is left as it was. */

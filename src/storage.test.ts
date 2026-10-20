@@ -1,17 +1,5 @@
-import { type KeyValueStorage, loadGuesses, loadHistory, recordSolved, safeStorage, saveGuesses } from './storage'
-
-function fakeStorage(initial: Record<string, string> = {}): KeyValueStorage {
-  const data = new Map(Object.entries(initial))
-  return { getItem: (k) => data.get(k) ?? null, setItem: (k, v) => void data.set(k, v) }
-}
-const throwing: KeyValueStorage = {
-  getItem: () => {
-    throw new Error('denied')
-  },
-  setItem: () => {
-    throw new Error('denied')
-  },
-}
+import { fakeStorage, throwingStorage as throwing } from './test/storage'
+import { loadGuesses, loadHistory, recordSolved, safeStorage, saveGuesses } from './storage'
 
 describe('History', () => {
   it('keeps the first Score for a Day recorded twice', () => {
@@ -30,12 +18,25 @@ describe('History', () => {
     expect(loadHistory(fakeStorage({ 'domindle.art.history': raw }))).toEqual([{ day: '2026-10-19', score: 1 }])
   })
 
+  it('ignores non-positive Scores', () => {
+    const raw = JSON.stringify([{ day: '2026-10-19', score: 0 }, { day: '2026-10-20', score: -1 }])
+    expect(loadHistory(fakeStorage({ 'domindle.art.history': raw }))).toEqual([])
+  })
+
   it('works through missing or throwing storage without errors', () => {
     for (const backend of [undefined, throwing]) {
       const storage = safeStorage(backend)
       expect(() => recordSolved(storage, '2026-10-19', 1)).not.toThrow()
       expect(loadHistory(storage)).toEqual([])
     }
+  })
+
+  it('still attempts the write when storage throws', () => {
+    const setItem = vi.fn(() => {
+      throw new Error('denied')
+    })
+    recordSolved(safeStorage({ getItem: () => null, setItem }), '2026-10-19', 1)
+    expect(setItem).toHaveBeenCalledOnce()
   })
 })
 
@@ -46,11 +47,36 @@ describe('saved game', () => {
     }
   })
 
-  it('round-trips for the same Day only', () => {
+  it('round-trips for the same Day', () => {
     const storage = fakeStorage()
     saveGuesses(storage, '2026-10-19', ['a1', 'b2'])
     expect(loadGuesses(storage, '2026-10-19')).toEqual(['a1', 'b2'])
+  })
+
+  it('is cleared by loading a different Day', () => {
+    const storage = fakeStorage()
+    saveGuesses(storage, '2026-10-19', ['a1', 'b2'])
     expect(loadGuesses(storage, '2026-10-20')).toEqual([])
     expect(loadGuesses(storage, '2026-10-19')).toEqual([])
+  })
+
+  it('leaves unparseable data in place rather than clearing it', () => {
+    const storage = fakeStorage({ 'domindle.art.game': 'not json' })
+    loadGuesses(storage, '2026-10-19')
+    expect(storage.getItem('domindle.art.game')).toBe('not json')
+  })
+
+  it.each(['0', '""', 'false'])('treats the falsy value %s as no saved game', (raw) => {
+    expect(loadGuesses(fakeStorage({ 'domindle.art.game': raw }), '2026-10-19')).toEqual([])
+  })
+
+  it('does not throw when clearing fails', () => {
+    const storage = {
+      getItem: () => JSON.stringify({ day: '2026-10-19', guesses: ['a1'] }),
+      setItem: () => {
+        throw new Error('denied')
+      },
+    }
+    expect(loadGuesses(storage, '2026-10-20')).toEqual([])
   })
 })
