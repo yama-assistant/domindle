@@ -69,57 +69,59 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   return (
     <main>
       <h1>{text.title}</h1>
-      <div class="frame">
-        <img
-          alt={text.artAlt}
-          src={`${artBase}${answer.art}`}
-          style={{
-            transformOrigin: `${origin.x * 100}% ${origin.y * 100}%`,
-            transform: `scale(${won ? 1 : scaleFor(wrongIds.length)})`,
-          }}
-        />
+      <div class="card">
+        <div class="frame">
+          <img
+            alt={text.artAlt}
+            src={`${artBase}${answer.art}`}
+            style={{
+              transformOrigin: `${origin.x * 100}% ${origin.y * 100}%`,
+              transform: `scale(${won ? 1 : scaleFor(wrongIds.length)})`,
+            }}
+          />
+        </div>
         <div class="banner" data-testid="banner">
           {won ? answer.name : text.guessBanner(guessedIds.length + 1)}
         </div>
+        <form
+          class="guess"
+          onSubmit={(e) => {
+            e.preventDefault()
+            submitTyped()
+          }}
+        >
+          <input
+            role="combobox"
+            aria-label={text.inputLabel}
+            aria-expanded={options.length > 0}
+            aria-controls="suggestions"
+            placeholder={text.inputPlaceholder}
+            autocomplete="off"
+            disabled={won}
+            value={query}
+            onInput={(e) => setQuery(e.currentTarget.value)}
+          />
+          <button type="submit" disabled={won}>
+            {text.guessButton}
+          </button>
+          {options.length > 0 && (
+            <ul id="suggestions" role="listbox" aria-label={text.suggestionsLabel}>
+              {options.map((c) => (
+                <li role="option" aria-selected={false} key={c.id} onClick={() => recordGuess(c.id)}>
+                  {c.name}
+                </li>
+              ))}
+            </ul>
+          )}
+        </form>
+        <ul class="wrong-guesses" aria-label={text.wrongGuessesLabel}>
+          {[...wrongIds].reverse().map((id) => (
+            <li class="wrong" key={id}>
+              {cardById(id)?.name}
+            </li>
+          ))}
+        </ul>
       </div>
-      <form
-        class="guess"
-        onSubmit={(e) => {
-          e.preventDefault()
-          submitTyped()
-        }}
-      >
-        <input
-          role="combobox"
-          aria-label={text.inputLabel}
-          aria-expanded={options.length > 0}
-          aria-controls="suggestions"
-          placeholder={text.inputPlaceholder}
-          autocomplete="off"
-          disabled={won}
-          value={query}
-          onInput={(e) => setQuery(e.currentTarget.value)}
-        />
-        <button type="submit" disabled={won}>
-          {text.guessButton}
-        </button>
-        {options.length > 0 && (
-          <ul id="suggestions" role="listbox" aria-label={text.suggestionsLabel}>
-            {options.map((c) => (
-              <li role="option" aria-selected={false} key={c.id} onClick={() => recordGuess(c.id)}>
-                {c.name}
-              </li>
-            ))}
-          </ul>
-        )}
-      </form>
-      <ul class="wrong-guesses" aria-label={text.wrongGuessesLabel}>
-        {[...wrongIds].reverse().map((id) => (
-          <li class="wrong" key={id}>
-            {cardById(id)?.name}
-          </li>
-        ))}
-      </ul>
       <footer>{text.creditNote}</footer>
     </main>
   )
