@@ -21,6 +21,17 @@ export function answerIdFor(schedule: AnswerSchedule, day: Day): string | undefi
   return schedule.answerIds[index]
 }
 
+/** The previous Day's Answer Card ID, or undefined on launch day (no earlier Day in the Schedule). */
+export const yesterdayAnswerIdFor = (schedule: AnswerSchedule, day: Day): string | undefined =>
+  answerIdFor(schedule, dayOf(new Date(Date.parse(day) - MS_PER_DAY)))
+
+/** The time left until midnight UTC as HH:MM:SS. */
+export function countdownTo(now: Date): string {
+  const left = Math.floor((Date.parse(dayOf(now)) + MS_PER_DAY - now.getTime()) / 1000)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(Math.floor(left / 3600))}:${pad(Math.floor(left / 60) % 60)}:${pad(left % 60)}`
+}
+
 export const scaleFor = (wrongGuesses: number) =>
   START_SCALE ** (1 - Math.min(wrongGuesses, MAX_STEPS) / MAX_STEPS)
 

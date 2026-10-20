@@ -3,12 +3,14 @@ import {
   type AnswerSchedule,
   type Catalog,
   answerIdFor,
+  countdownTo,
   dayOf,
   originFor,
   resolveTyped,
   scaleFor,
   shareText,
   suggestions,
+  yesterdayAnswerIdFor,
 } from './game'
 import { type KeyValueStorage, loadGuesses, recordSolved, safeStorage, saveGuesses } from './storage'
 import { text } from './text'
@@ -29,9 +31,13 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const [query, setQuery] = useState('')
   const [shareStatus, setShareStatus] = useState<'copied' | 'failed'>()
 
+  const [countdown, setCountdown] = useState(() => countdownTo(now()))
+
   useEffect(() => {
     const tick = setInterval(() => {
-      const today = dayOf(now())
+      const current = now()
+      setCountdown(countdownTo(current))
+      const today = dayOf(current)
       if (today === day) return
       setDay(today)
       setGuessedIds(loadGuesses(store, today))
@@ -59,6 +65,8 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const wrongIds = guessedIds.filter((id) => id !== answer.id)
   const options = suggestions(catalog, query, guessedIds)
   const origin = originFor(day)
+  const yesterdayId = yesterdayAnswerIdFor(schedule, day)
+  const yesterday = yesterdayId === undefined ? undefined : cardById(yesterdayId)
 
   const recordGuess = (id: string) => {
     const next = [...guessedIds, id]
@@ -148,6 +156,10 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
           </p>
         </div>
       )}
+      <p class="daily-footer" data-testid="daily-footer">
+        {yesterday && `${text.yesterdaysAnswer(yesterday.name)} · `}
+        {text.nextPuzzle(countdown)}
+      </p>
       <footer>{text.creditNote}</footer>
     </main>
   )

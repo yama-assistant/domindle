@@ -324,3 +324,50 @@ describe('persistence and the Schedule', () => {
     expect(screen.getByText(/no puzzle today/i)).toBeInTheDocument()
   })
 })
+
+describe("Yesterday's Answer and countdown footer", () => {
+  const footer = () => screen.getByTestId('daily-footer')
+
+  it("shows yesterday's Answer by Card name and the time to midnight UTC", () => {
+    setup('2026-10-20T12:00:00Z')
+    expect(footer()).toHaveTextContent("Yesterday's answer: Cellar · Next puzzle in 12:00:00")
+  })
+
+  it("omits Yesterday's Answer on launch day", () => {
+    setup('2026-10-19T23:59:59Z')
+    expect(footer()).toHaveTextContent('Next puzzle in 00:00:01')
+    expect(footer()).not.toHaveTextContent(/yesterday/i)
+  })
+
+  it('counts down every second', () => {
+    vi.useFakeTimers()
+    try {
+      let current = new Date('2026-10-20T12:00:00Z')
+      render(<App catalog={catalog} schedule={schedule} now={() => current} storage={fakeStorage()} artBase="/art/" />)
+      current = new Date('2026-10-20T12:00:01Z')
+      act(() => {
+        vi.advanceTimersByTime(1000)
+      })
+      expect(footer()).toHaveTextContent('Next puzzle in 11:59:59')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('loads the new Daily Puzzle and its footer when the countdown hits zero', () => {
+    vi.useFakeTimers()
+    try {
+      let current = new Date('2026-10-19T23:59:59Z')
+      render(<App catalog={catalog} schedule={schedule} now={() => current} storage={fakeStorage()} artBase="/art/" />)
+      expect(footer()).toHaveTextContent('Next puzzle in 00:00:01')
+      current = new Date('2026-10-20T00:00:00Z')
+      act(() => {
+        vi.advanceTimersByTime(1000)
+      })
+      expect(screen.getByRole('img', { name: /artwork/i }).getAttribute('src')).toBe('/art/b2.webp')
+      expect(footer()).toHaveTextContent("Yesterday's answer: Cellar · Next puzzle in 24:00:00")
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
