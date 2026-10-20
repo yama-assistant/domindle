@@ -7,6 +7,7 @@ import {
   originFor,
   resolveTyped,
   scaleFor,
+  shareText,
   suggestions,
 } from './game'
 import { type KeyValueStorage, loadGuesses, safeStorage, saveGuesses } from './storage'
@@ -26,6 +27,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const [day, setDay] = useState(() => dayOf(now()))
   const [guessedIds, setGuessedIds] = useState(() => loadGuesses(store, day))
   const [query, setQuery] = useState('')
+  const [shareStatus, setShareStatus] = useState<'copied' | 'failed'>()
 
   useEffect(() => {
     const tick = setInterval(() => {
@@ -34,6 +36,7 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
       setDay(today)
       setGuessedIds(loadGuesses(store, today))
       setQuery('')
+      setShareStatus(undefined)
     }, 1000)
     return () => clearInterval(tick)
   }, [day, now, store])
@@ -64,6 +67,16 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   const submitTyped = () => {
     const card = resolveTyped(options, query)
     if (card && !won) recordGuess(card.id)
+  }
+
+  const share = async () => {
+    setShareStatus(undefined)
+    try {
+      await navigator.clipboard.writeText(shareText(day, guessedIds.indexOf(answer.id) + 1, text.shareTitle))
+      setShareStatus('copied')
+    } catch {
+      setShareStatus('failed')
+    }
   }
 
   return (
@@ -122,6 +135,16 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
           ))}
         </ul>
       </div>
+      {won && (
+        <div class="share">
+          <button type="button" onClick={share}>
+            {text.shareButton}
+          </button>
+          <p role="status">
+            {shareStatus === 'copied' ? text.shareCopied : shareStatus === 'failed' ? text.shareFailed : ''}
+          </p>
+        </div>
+      )}
       <footer>{text.creditNote}</footer>
     </main>
   )

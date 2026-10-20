@@ -199,6 +199,47 @@ describe('winning', () => {
   })
 })
 
+describe('sharing', () => {
+  const stubClipboard = (writeText: (t: string) => Promise<void>) =>
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('is not offered before winning', async () => {
+    const { guess } = setup()
+    await guess('Chapel')
+    expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument()
+  })
+
+  it('copies the exact spoiler-free text and confirms', async () => {
+    const writeText = vi.fn(async () => {})
+    const { user, guess } = setup()
+    stubClipboard(writeText)
+    for (const name of ['Chapel', 'Market', 'Mine', 'Cellar']) await guess(name)
+    await user.click(screen.getByRole('button', { name: 'Share' }))
+    expect(writeText).toHaveBeenCalledWith('Domindle Art · 19 Oct 2026 🟥🟥🟥🟩 4 guesses')
+    expect(screen.getByRole('status')).toHaveTextContent(/copied/i)
+  })
+
+  it('never includes the Card name', async () => {
+    const writeText = vi.fn(async () => {})
+    const { user, guess } = setup()
+    stubClipboard(writeText)
+    await guess('Cellar')
+    await user.click(screen.getByRole('button', { name: 'Share' }))
+    expect(writeText).toHaveBeenCalledWith('Domindle Art · 19 Oct 2026 🟩 1 guess')
+  })
+
+  it('tells the player when the clipboard is unavailable', async () => {
+    const { user, guess } = setup()
+    stubClipboard(async () => {
+      throw new Error('denied')
+    })
+    await guess('Cellar')
+    await user.click(screen.getByRole('button', { name: 'Share' }))
+    expect(screen.getByRole('status')).toHaveTextContent(/couldn't copy/i)
+  })
+})
+
 describe('persistence and the Schedule', () => {
   it('keeps today\'s Guesses across a reload', async () => {
     const storage = fakeStorage()
