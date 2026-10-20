@@ -6,6 +6,9 @@ export type Day = string
 /** The Answer Schedule. `launch` is day 0; `answerIds` are opaque Card IDs. */
 export type AnswerSchedule = { launch: Day; answerIds: string[] }
 
+/** The first Day with a Daily Puzzle. */
+export const LAUNCH_DAY: Day = '2026-10-19'
+
 /** Wrong Guesses after which the art is fully zoomed out. */
 export const MAX_STEPS = 9
 export const START_SCALE = 7

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
+import { answerFor } from './answer'
 import {
-  type AnswerSchedule,
   type Catalog,
-  answerIdFor,
+  LAUNCH_DAY,
   countdownTo,
   dayOf,
   mergeGuess,
@@ -10,8 +10,8 @@ import {
   resolveTyped,
   scaleFor,
   shareText,
+  shiftDay,
   suggestions,
-  yesterdayAnswerIdFor,
 } from './game'
 import { StatsDialog, StatsView } from './Stats'
 import { computeStats } from './stats'
@@ -21,13 +21,12 @@ import './style.css'
 
 type Props = {
   catalog: Catalog
-  schedule: AnswerSchedule
   now: () => Date
   storage?: KeyValueStorage
   artBase: string
 }
 
-export function App({ catalog, schedule, now, storage, artBase }: Props) {
+export function App({ catalog, now, storage, artBase }: Props) {
   const store = useMemo(() => safeStorage(storage), [storage])
   const [day, setDay] = useState(() => dayOf(now()))
   const [guessedIds, setGuessedIds] = useState(() => loadGuesses(store, day))
@@ -59,10 +58,8 @@ export function App({ catalog, schedule, now, storage, artBase }: Props) {
   }, [day, now, store])
 
   const cardById = (id: string) => catalog.find((c) => c.id === id)
-  const answerId = answerIdFor(schedule, day)
-  const answer = answerId === undefined ? undefined : cardById(answerId)
-  const yesterdayId = yesterdayAnswerIdFor(schedule, day)
-  const yesterday = yesterdayId === undefined ? undefined : cardById(yesterdayId)
+  const answer = day < LAUNCH_DAY ? undefined : answerFor(catalog, day)
+  const yesterday = day <= LAUNCH_DAY ? undefined : answerFor(catalog, shiftDay(day, -1))
   const dailyFooter = (
     <p class="daily-footer" data-testid="daily-footer">
       {yesterday && `${text.yesterdaysAnswer(yesterday.name)} · `}

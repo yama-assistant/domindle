@@ -1,7 +1,8 @@
 import { act, render, screen, within } from '@testing-library/preact'
 import userEvent from '@testing-library/user-event'
 import { App } from './App'
-import type { AnswerSchedule, Catalog } from './game'
+import { answerFor } from './answer'
+import type { Catalog } from './game'
 import { type KeyValueStorage, loadHistory } from './storage'
 import { text } from './text'
 import { fakeStorage, throwingStorage } from './test/storage'
@@ -21,14 +22,19 @@ const catalog: Catalog = [
   { id: 'k11', name: 'Library', answer: true, art: 'k11.webp' },
   { id: 'p0', name: 'Augurs', answer: false, art: 'p0.webp' },
 ]
-// day 0 = 2026-10-19 → Cellar, day 1 → Chapel, day 2 → Herb Gatherer
-const schedule: AnswerSchedule = { launch: '2026-10-19', answerIds: ['a1', 'b2', 'c3', 'd4'] }
+
+const LAUNCH = '2026-10-19'
+const NEXT = '2026-10-20'
+// The Answers come from the formula; `W[i]` are Cards that are the Answer on neither of the first two Days.
+const A0 = answerFor(catalog, LAUNCH)!
+const A1 = answerFor(catalog, NEXT)!
+const W = catalog.filter((c) => c.answer && c.id !== A0.id && c.id !== A1.id)
 
 const at = (iso: string) => () => new Date(iso)
 
 function setup(iso = '2026-10-19T12:00:00Z', storage: KeyValueStorage = fakeStorage()) {
   const user = userEvent.setup()
-  const utils = render(<App catalog={catalog} schedule={schedule} now={at(iso)} storage={storage} artBase="/art/" />)
+  const utils = render(<App catalog={catalog} now={at(iso)} storage={storage} artBase="/art/" />)
   const art = () => screen.getByRole('img', { name: /artwork/i }) as HTMLImageElement
   const input = () => screen.getByRole('combobox', { name: /guess the card/i })
   const guess = async (text: string) => {
@@ -41,17 +47,17 @@ function setup(iso = '2026-10-19T12:00:00Z', storage: KeyValueStorage = fakeStor
 }
 
 describe("today's Answer", () => {
-  it('is picked by UTC Day, and changes at midnight UTC', async () => {
+  it('is the formula\'s Answer for the UTC Day, and changes at midnight UTC', async () => {
     const day0 = setup('2026-10-19T23:59:59Z')
-    await day0.guess('Cellar')
-    expect(screen.getByTestId('banner')).toHaveTextContent('Cellar')
+    await day0.guess(A0.name)
+    expect(screen.getByTestId('banner')).toHaveTextContent(A0.name)
     day0.unmount()
 
     const day1 = setup('2026-10-20T00:00:00Z')
-    await day1.guess('Cellar')
+    await day1.guess(A0.name)
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 2')
-    await day1.guess('Chapel')
-    expect(screen.getByTestId('banner')).toHaveTextContent('Chapel')
+    await day1.guess(A1.name)
+    expect(screen.getByTestId('banner')).toHaveTextContent(A1.name)
   })
 
   it('rolls over to the next Day in a tab left open past midnight UTC', () => {
@@ -59,15 +65,15 @@ describe("today's Answer", () => {
     try {
       let current = new Date('2026-10-19T23:59:58Z')
       const { art } = (() => {
-        render(<App catalog={catalog} schedule={schedule} now={() => current} storage={fakeStorage()} artBase="/art/" />)
+        render(<App catalog={catalog} now={() => current} storage={fakeStorage()} artBase="/art/" />)
         return { art: () => screen.getByRole('img', { name: /artwork/i }) }
       })()
-      expect(art().getAttribute('src')).toBe('/art/a1.webp')
+      expect(art().getAttribute('src')).toBe(`/art/${A0.art}`)
       current = new Date('2026-10-20T00:00:01Z')
       act(() => {
         vi.advanceTimersByTime(1000)
       })
-      expect(art().getAttribute('src')).toBe('/art/b2.webp')
+      expect(art().getAttribute('src')).toBe(`/art/${A1.art}`)
       expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
     } finally {
       vi.useRealTimers()
@@ -76,7 +82,7 @@ describe("today's Answer", () => {
 
   it('uses opaque art file names', () => {
     const { art } = setup()
-    expect(art().getAttribute('src')).toBe('/art/a1.webp')
+    expect(art().getAttribute('src')).toBe(`/art/${A0.art}`)
   })
 })
 
@@ -99,7 +105,7 @@ describe('zoom', () => {
 
   it('zooms out one step per wrong Guess and is fully out after 9', async () => {
     const { art, guess } = setup()
-    const wrong = ['Chapel', 'Herb Gatherer', 'Séance', 'Market', 'Mine', 'Moat', 'Village', 'Witch', 'Smithy']
+    const wrong = W.slice(0, 9).map((c) => c.name)
     const scales = [art().style.transform]
     for (const name of wrong) {
       await guess(name)
@@ -130,8 +136,8 @@ describe('autocomplete', () => {
 
   it('excludes Cards already Guessed', async () => {
     const { user, input, guess } = setup()
-    await guess('Chapel')
-    await user.type(input(), 'chap')
+    await guess(W[0].name)
+    await user.type(input(), W[0].name.slice(0, 4))
     expect(screen.queryByRole('option')).not.toBeInTheDocument()
   })
 })
@@ -139,8 +145,8 @@ describe('autocomplete', () => {
 describe('guessing', () => {
   it('submits with Enter or the button', async () => {
     const { user, input, guess } = setup()
-    await guess('Chapel')
-    await user.type(input(), 'Market')
+    await guess(W[0].name)
+    await user.type(input(), W[1].name)
     await user.click(screen.getByRole('button', { name: 'Guess' }))
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 3')
   })
@@ -155,10 +161,10 @@ describe('guessing', () => {
   it('lists wrong Guesses in red, newest first, and the banner shows the Guess number', async () => {
     const { guess } = setup()
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
-    await guess('Chapel')
-    await guess('Market')
+    await guess(W[0].name)
+    await guess(W[1].name)
     const items = within(screen.getByRole('list', { name: 'Wrong guesses' })).getAllByRole('listitem')
-    expect(items.map((i) => i.textContent)).toEqual(['Market', 'Chapel'])
+    expect(items.map((i) => i.textContent)).toEqual([W[1].name, W[0].name])
     items.forEach((i) => expect(i).toHaveClass('wrong'))
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 3')
   })
@@ -179,10 +185,10 @@ describe('guessing', () => {
 describe('winning', () => {
   it('shows the full art and the Card name, and disables the input', async () => {
     const { art, input, guess } = setup()
-    await guess('Chapel')
-    await guess('Cellar')
+    await guess(W[0].name)
+    await guess(A0.name)
     expect(art().style.transform).toBe('scale(1)')
-    expect(screen.getByTestId('banner')).toHaveTextContent('Cellar')
+    expect(screen.getByTestId('banner')).toHaveTextContent(A0.name)
     expect(screen.getByTestId('banner')).not.toHaveTextContent('Guess')
     expect(input()).toBeDisabled()
   })
@@ -195,7 +201,7 @@ describe('sharing', () => {
 
   it('is not offered before winning', async () => {
     const { guess } = setup()
-    await guess('Chapel')
+    await guess(W[0].name)
     expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument()
   })
 
@@ -203,7 +209,7 @@ describe('sharing', () => {
     const writeText = vi.fn(async () => {})
     const { user, guess } = setup()
     stubClipboard(writeText)
-    for (const name of ['Chapel', 'Market', 'Mine', 'Cellar']) await guess(name)
+    for (const name of [W[0].name, W[1].name, W[2].name, A0.name]) await guess(name)
     await user.click(screen.getByRole('button', { name: 'Share' }))
     expect(writeText).toHaveBeenCalledWith('Domindle Art · 19 Oct 2026 🟥🟥🟥🟩 4 guesses')
     expect(screen.getByRole('status')).toHaveTextContent(/copied/i)
@@ -213,7 +219,7 @@ describe('sharing', () => {
     const writeText = vi.fn(async () => {})
     const { user, guess } = setup()
     stubClipboard(writeText)
-    await guess('Cellar')
+    await guess(A0.name)
     await user.click(screen.getByRole('button', { name: 'Share' }))
     expect(writeText).toHaveBeenCalledWith('Domindle Art · 19 Oct 2026 🟩 1 guess')
   })
@@ -223,27 +229,27 @@ describe('sharing', () => {
     stubClipboard(async () => {
       throw new Error('denied')
     })
-    await guess('Cellar')
+    await guess(A0.name)
     await user.click(screen.getByRole('button', { name: 'Share' }))
     expect(screen.getByRole('status')).toHaveTextContent(/couldn't copy/i)
   })
 })
 
-describe('persistence and the Schedule', () => {
+describe('persistence', () => {
   it('keeps today\'s Guesses across a reload', async () => {
     const storage = fakeStorage()
     const first = setup('2026-10-19T12:00:00Z', storage)
-    await first.guess('Chapel')
+    await first.guess(W[0].name)
     first.unmount()
     setup('2026-10-19T13:00:00Z', storage)
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 2')
-    expect(screen.getByRole('listitem')).toHaveTextContent('Chapel')
+    expect(screen.getByRole('listitem')).toHaveTextContent(W[0].name)
   })
 
   it('starts fresh on a new Day', async () => {
     const storage = fakeStorage()
     const first = setup('2026-10-19T12:00:00Z', storage)
-    await first.guess('Chapel')
+    await first.guess(W[0].name)
     first.unmount()
     setup('2026-10-20T12:00:00Z', storage)
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
@@ -252,11 +258,11 @@ describe('persistence and the Schedule', () => {
   it('keeps a solved game solved after a reload, with the zoom and Score unchanged', async () => {
     const storage = fakeStorage()
     const first = setup('2026-10-19T12:00:00Z', storage)
-    await first.guess('Chapel')
-    await first.guess('Cellar')
+    await first.guess(W[0].name)
+    await first.guess(A0.name)
     first.unmount()
     const again = setup('2026-10-19T13:00:00Z', storage)
-    expect(screen.getByTestId('banner')).toHaveTextContent('Cellar')
+    expect(screen.getByTestId('banner')).toHaveTextContent(A0.name)
     expect(again.input()).toBeDisabled()
     expect(again.art().style.transform).toBe('scale(1)')
     expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
@@ -265,8 +271,8 @@ describe('persistence and the Schedule', () => {
   it('restores the zoom step after a reload mid-game', async () => {
     const storage = fakeStorage()
     const first = setup('2026-10-19T12:00:00Z', storage)
-    await first.guess('Chapel')
-    await first.guess('Market')
+    await first.guess(W[0].name)
+    await first.guess(W[1].name)
     const zoom = first.art().style.transform
     first.unmount()
     expect(setup('2026-10-19T13:00:00Z', storage).art().style.transform).toBe(zoom)
@@ -275,7 +281,7 @@ describe('persistence and the Schedule', () => {
   it('clears the previous Day\'s unfinished game and records nothing for it', async () => {
     const storage = fakeStorage()
     const first = setup('2026-10-19T12:00:00Z', storage)
-    await first.guess('Market')
+    await first.guess(W[1].name)
     first.unmount()
     setup('2026-10-20T12:00:00Z', storage)
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 1')
@@ -285,7 +291,7 @@ describe('persistence and the Schedule', () => {
   it('really clears the previous Day\'s unfinished game: it does not return if the clock goes back', async () => {
     const storage = fakeStorage()
     const first = setup('2026-10-19T12:00:00Z', storage)
-    await first.guess('Market')
+    await first.guess(W[1].name)
     first.unmount()
     setup('2026-10-20T12:00:00Z', storage).unmount()
     setup('2026-10-19T18:00:00Z', storage)
@@ -294,7 +300,7 @@ describe('persistence and the Schedule', () => {
 
   it('records a solved Day in the History even if the win was saved without it', () => {
     const storage = fakeStorage()
-    storage.setItem('domindle.art.game', JSON.stringify({ day: '2026-10-19', guesses: ['b2', 'a1'] }))
+    storage.setItem('domindle.art.game', JSON.stringify({ day: '2026-10-19', guesses: [W[0].id, A0.id] }))
     setup('2026-10-19T12:00:00Z', storage)
     expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
   })
@@ -302,12 +308,12 @@ describe('persistence and the Schedule', () => {
   it('records each solved Day once in the History', async () => {
     const storage = fakeStorage()
     const d0 = setup('2026-10-19T12:00:00Z', storage)
-    await d0.guess('Cellar')
+    await d0.guess(A0.name)
     d0.unmount()
     setup('2026-10-19T14:00:00Z', storage).unmount()
     const d1 = setup('2026-10-20T12:00:00Z', storage)
-    await d1.guess('Market')
-    await d1.guess('Chapel')
+    await d1.guess(W[1].name)
+    await d1.guess(A1.name)
     expect(loadHistory(storage)).toEqual([
       { day: '2026-10-19', score: 1 },
       { day: '2026-10-20', score: 2 },
@@ -319,7 +325,7 @@ describe('persistence and the Schedule', () => {
     const saved = (storage: KeyValueStorage) => JSON.parse(storage.getItem(KEY) ?? 'null')
     const iso = '2026-10-19T12:00:00Z'
     const tab = (storage: KeyValueStorage) => {
-      const view = render(<App catalog={catalog} schedule={schedule} now={at(iso)} storage={storage} artBase="/art/" />)
+      const view = render(<App catalog={catalog} now={at(iso)} storage={storage} artBase="/art/" />)
       const root = view.container as HTMLElement
       const user = userEvent.setup()
       const input = () => within(root).getByRole('combobox', { name: /guess the card/i })
@@ -337,13 +343,13 @@ describe('persistence and the Schedule', () => {
       const storage = fakeStorage()
       const a = tab(storage)
       const b = tab(storage)
-      await a.guess('Market')
-      await a.guess('Cellar')
-      await b.guess('Mine')
+      await a.guess(W[1].name)
+      await a.guess(A0.name)
+      await b.guess(W[2].name)
       expect(b.input()).toBeDisabled()
-      expect(b.banner()).toHaveTextContent('Cellar')
+      expect(b.banner()).toHaveTextContent(A0.name)
       expect(b.container.querySelector('.score')).toHaveTextContent(text.scoreLine(2))
-      expect(saved(storage)).toEqual({ day: '2026-10-19', guesses: ['e5', 'a1'] })
+      expect(saved(storage)).toEqual({ day: '2026-10-19', guesses: [W[1].id, A0.id] })
       expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 2 }])
     })
 
@@ -351,58 +357,67 @@ describe('persistence and the Schedule', () => {
       const storage = fakeStorage()
       const a = tab(storage)
       const b = tab(storage)
-      await a.guess('Market')
-      await b.guess('Mine')
-      expect(saved(storage).guesses).toEqual(['e5', 'f6'])
-      expect(b.wrong()).toEqual(['Mine', 'Market'])
-      await a.guess('Moat')
-      expect(saved(storage).guesses).toEqual(['e5', 'f6', 'g7'])
+      await a.guess(W[1].name)
+      await b.guess(W[2].name)
+      expect(saved(storage).guesses).toEqual([W[1].id, W[2].id])
+      expect(b.wrong()).toEqual([W[2].name, W[1].name])
+      await a.guess(W[3].name)
+      expect(saved(storage).guesses).toEqual([W[1].id, W[2].id, W[3].id])
     })
 
     it('keeps the saved Score and the History Score in agreement', async () => {
       const storage = fakeStorage()
       const a = tab(storage)
       const b = tab(storage)
-      await a.guess('Cellar')
-      await b.guess('Cellar')
+      await a.guess(A0.name)
+      await b.guess(A0.name)
       expect(b.input()).toBeDisabled()
-      expect(saved(storage).guesses).toEqual(['a1'])
+      expect(saved(storage).guesses).toEqual([A0.id])
       expect(loadHistory(storage)).toEqual([{ day: '2026-10-19', score: 1 }])
     })
 
     it('does not overwrite the new Day\'s game from a tab that has not yet rolled over', async () => {
       const storage = fakeStorage()
       let current = new Date('2026-10-19T23:59:59Z')
-      const stale = render(<App catalog={catalog} schedule={schedule} now={() => current} storage={storage} artBase="/art/" />)
+      const stale = render(<App catalog={catalog} now={() => current} storage={storage} artBase="/art/" />)
       const staleRoot = stale.container as HTMLElement
       // Another tab already rolled over to Day 1 and guessed there.
-      storage.setItem(KEY, JSON.stringify({ day: '2026-10-20', guesses: ['a1'] }))
+      storage.setItem(KEY, JSON.stringify({ day: '2026-10-20', guesses: [A0.id] }))
       current = new Date('2026-10-20T00:00:01Z')
       const user = userEvent.setup()
-      await user.type(within(staleRoot).getByRole('combobox', { name: /guess the card/i }), 'Market')
+      await user.type(within(staleRoot).getByRole('combobox', { name: /guess the card/i }), W[1].name)
       await user.keyboard('{Enter}')
-      expect(saved(storage)).toEqual({ day: '2026-10-20', guesses: ['a1'] })
+      expect(saved(storage)).toEqual({ day: '2026-10-20', guesses: [A0.id] })
       expect(within(staleRoot).getByTestId('banner')).toHaveTextContent('Guess 2')
     })
 
     it('keeps this tab\'s Guesses when storage cannot be read', async () => {
       const a = tab(throwingStorage)
-      await a.guess('Market')
-      await a.guess('Mine')
-      expect(a.wrong()).toEqual(['Mine', 'Market'])
+      await a.guess(W[1].name)
+      await a.guess(W[2].name)
+      expect(a.wrong()).toEqual([W[2].name, W[1].name])
       expect(a.banner()).toHaveTextContent('Guess 3')
     })
   })
 
   it('is still playable when storage throws', async () => {
     const { guess } = setup('2026-10-19T12:00:00Z', throwingStorage)
-    await guess('Chapel')
+    await guess(W[0].name)
     expect(screen.getByTestId('banner')).toHaveTextContent('Guess 2')
   })
 
-  it('says there is no puzzle when the Schedule does not cover the Day', () => {
-    setup('2026-11-30T12:00:00Z')
+  it('says there is no puzzle before launch', () => {
+    setup('2026-10-18T12:00:00Z')
     expect(screen.getByText(/no puzzle today/i)).toBeInTheDocument()
+  })
+
+  it('still gives a puzzle every Day when the Catalog has a single possible Answer', () => {
+    const only: Catalog = [{ id: 'only', name: 'Only', answer: true, art: 'only.webp' }, catalog[catalog.length - 1]!]
+    for (const iso of ['2026-10-19T12:00:00Z', '2026-10-20T12:00:00Z', '2027-03-01T12:00:00Z']) {
+      const view = render(<App catalog={only} now={at(iso)} storage={fakeStorage()} artBase="/art/" />)
+      expect(screen.getByRole('img', { name: /artwork/i }).getAttribute('src')).toBe('/art/only.webp')
+      view.unmount()
+    }
   })
 })
 
@@ -462,7 +477,7 @@ describe('stats', () => {
   it('extends the Streak when today is solved', async () => {
     const storage = seeded([{ day: '2026-10-18', score: 2 }])
     const s = setup('2026-10-19T12:00:00Z', storage)
-    await s.guess('Cellar')
+    await s.guess(A0.name)
     expect(screen.getByText(/solved it in 1 guess/i)).toBeInTheDocument()
     const dialog = await openStats(s)
     expect(stat(dialog, 'Current streak')).toBe('2')
@@ -471,9 +486,9 @@ describe('stats', () => {
 
   it('shows the Score and the stats on the win screen, not before', async () => {
     const s = setup()
-    await s.guess('Chapel')
+    await s.guess(W[0].name)
     expect(screen.queryByText(/solved it in/i)).not.toBeInTheDocument()
-    await s.guess('Cellar')
+    await s.guess(A0.name)
     expect(screen.getByText('You solved it in 2 guesses!')).toBeInTheDocument()
     const win = screen.getByText('You solved it in 2 guesses!').parentElement as HTMLElement
     expect(stat(win, 'Days played')).toBe('1')
@@ -505,10 +520,10 @@ describe("Yesterday's Answer and countdown footer", () => {
   const footer = () => screen.getByTestId('daily-footer')
 
   /** Renders with a clock the test moves by hand; each tick advances fake timers one second. */
-  function setupTicking(iso: string, sched = schedule) {
+  function setupTicking(iso: string) {
     vi.useFakeTimers()
     let current = new Date(iso)
-    render(<App catalog={catalog} schedule={sched} now={() => current} storage={fakeStorage()} artBase="/art/" />)
+    render(<App catalog={catalog} now={() => current} storage={fakeStorage()} artBase="/art/" />)
     return {
       tickTo(next: string) {
         current = new Date(next)
@@ -522,7 +537,7 @@ describe("Yesterday's Answer and countdown footer", () => {
 
   it("shows yesterday's Answer by Card name and the time to midnight UTC", () => {
     setup('2026-10-20T12:00:00Z')
-    expect(footer()).toHaveTextContent("Yesterday's answer: Cellar · Next puzzle in 12:00:00")
+    expect(footer()).toHaveTextContent(`Yesterday's answer: ${A0.name} · Next puzzle in 12:00:00`)
   })
 
   it("omits Yesterday's Answer on launch day", () => {
@@ -541,34 +556,20 @@ describe("Yesterday's Answer and countdown footer", () => {
     const clock = setupTicking('2026-10-19T23:59:59Z')
     expect(footer()).toHaveTextContent('Next puzzle in 00:00:01')
     clock.tickTo('2026-10-20T00:00:00Z')
-    expect(screen.getByRole('img', { name: /artwork/i }).getAttribute('src')).toBe('/art/b2.webp')
-    expect(footer()).toHaveTextContent("Yesterday's answer: Cellar · Next puzzle in 23:59:59")
+    expect(screen.getByRole('img', { name: /artwork/i }).getAttribute('src')).toBe(`/art/${A1.art}`)
+    expect(footer()).toHaveTextContent(`Yesterday's answer: ${A0.name} · Next puzzle in 23:59:59`)
   })
 
-  it('keeps counting down on a Day the Schedule does not cover', () => {
-    const clock = setupTicking('2026-11-30T23:59:58Z')
+  it('keeps counting down before launch', () => {
+    const clock = setupTicking('2026-10-18T23:59:58Z')
     expect(screen.getByText(/no puzzle today/i)).toBeInTheDocument()
     expect(footer()).toHaveTextContent('Next puzzle in 00:00:02')
-    clock.tickTo('2026-11-30T23:59:59Z')
+    clock.tickTo('2026-10-18T23:59:59Z')
     expect(footer()).toHaveTextContent('Next puzzle in 00:00:01')
   })
 
-  it("omits Yesterday's Answer when that Card is not in the Catalog", () => {
-    render(
-      <App
-        catalog={catalog}
-        schedule={{ launch: '2026-10-19', answerIds: ['gone', 'b2'] }}
-        now={at('2026-10-20T12:00:00Z')}
-        storage={fakeStorage()}
-        artBase="/art/"
-      />,
-    )
-    expect(footer()).toHaveTextContent('Next puzzle in 12:00:00')
-    expect(footer()).not.toHaveTextContent(/yesterday/i)
-  })
-
-  it("omits Yesterday's Answer when the Schedule does not cover yesterday", () => {
-    setup('2026-11-30T12:00:00Z')
+  it("omits Yesterday's Answer before launch", () => {
+    setup('2026-10-18T12:00:00Z')
     expect(footer()).not.toHaveTextContent(/yesterday/i)
   })
 })
