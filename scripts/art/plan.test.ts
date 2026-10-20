@@ -19,9 +19,14 @@ describe('wikiUrl', () => {
 })
 
 describe('wikiFiles', () => {
-  it('tries the name as is, then without spaces', () => {
+  it('tries the name as is, then title-cased, then without spaces', () => {
     expect(wikiFiles('Cellar')).toEqual(['CellarArt.jpg'])
     expect(wikiFiles('Hunting Party')).toEqual(['Hunting PartyArt.jpg', 'HuntingPartyArt.jpg'])
+    expect(wikiFiles('Jack of all Trades')).toEqual([
+      'Jack of all TradesArt.jpg',
+      'Jack of All TradesArt.jpg',
+      'JackofallTradesArt.jpg',
+    ])
   })
 })
 

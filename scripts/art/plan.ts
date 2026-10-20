@@ -12,9 +12,10 @@ export function wikiUrl(file: string): string {
   return `${WIKI}/${md5[0]}/${md5.slice(0, 2)}/${encodeURIComponent(name)}`
 }
 
-/** Wiki art file names to try for a Card, most likely first. Files are usually `<Name>Art.jpg`. */
+/** Wiki art file names to try for a Card, most likely first. Files are usually `<Name>Art.jpg`, sometimes with every word capitalised. */
 export function wikiFiles(name: string): string[] {
-  const files = [`${name}Art.jpg`, `${name.replace(/ /g, '')}Art.jpg`]
+  const titled = name.replace(/\b(?!(?:of|the|a|and)\b)[a-z]/g, (c) => c.toUpperCase())
+  const files = [`${name}Art.jpg`, `${titled}Art.jpg`, `${name.replace(/ /g, '')}Art.jpg`]
   return [...new Set(files)]
 }
 
